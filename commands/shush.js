@@ -15,7 +15,7 @@ async function shushBan(args) {
   let expirationTime = null;
   let reason = "";
   const textAfterUser = commands.slice(1).join(" ");
-  const forIndex = textAfterUser.toLowerCase().indexOf(" for ");
+  const forIndex = textAfterUser.toLowerCase().lastIndexOf(" for ");
 
   if (forIndex !== -1) {
     reason = textAfterUser.substring(0, forIndex);
