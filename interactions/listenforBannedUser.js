@@ -63,7 +63,7 @@ async function listenforBannedUser(args) {
       text: `:wave_pikachu_2: Your message was deleted because ${userData.reason}`,
     });
   } catch (e) {
-    await say(`An error occured: ${e}`);
+    await say(`An error occurred: ${e}`);
   }
 }
 

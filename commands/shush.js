@@ -104,7 +104,7 @@ async function shushBan(args) {
     await client.chat.postEphemeral({
       channel: channel_id,
       user: user_id,
-      text: `An error occured: ${e}`,
+      text: `An error occurred: ${e}`,
     });
   }
 }
