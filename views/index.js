@@ -5,7 +5,7 @@ async function handleViews({ ack, logger, event, client, body, say }) {
     const viewId = body.view.callback_id;
     const bodyType = body.view.type;
     // const actionId = firstAction.action_id;
-    // const blockId = firstAction.block_id;    
+    // const blockId = firstAction.block_id;
     const viewFile = path.resolve(__dirname, `${viewId}.js`);
 
     // Dynamically require action handlers

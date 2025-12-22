@@ -15,7 +15,7 @@ async function purge(args) {
   amount = parseInt(amount);
   if (amount < 0 || amount > 100)
     return respond(
-      `:x: You need to specify a valid number of messages to purge. (must be under 100 and above 0)`
+      `:x: You need to specify a valid number of messages to purge. (must be under 100 and above 0)`,
     );
   const userId = commands[1];
   if (userId) {
@@ -27,7 +27,7 @@ async function purge(args) {
     // check if users are admin
     if (user.user.is_admin)
       return respond(
-        `:x: User <@${userId}> is  an admin. Cannot directly purge messages from admin.`
+        `:x: User <@${userId}> is  an admin. Cannot directly purge messages from admin.`,
       );
   }
 
@@ -72,7 +72,7 @@ async function purge(args) {
       text: `<@${user_id}> requested to purge \`${amount}\` messages ${
         userId ? `from <@${userId}>` : ""
       }\n\`${cleared_messages}\` messages were removed correctly, Took \`${Math.floor(
-        (Date.now() - stamp) / 1000
+        (Date.now() - stamp) / 1000,
       )}s\`. `,
     }),
   ]);
