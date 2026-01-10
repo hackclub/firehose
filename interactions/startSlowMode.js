@@ -1,43 +1,30 @@
 const { getPrisma } = require("../utils/prismaConnector")
+const getChannelManagers = require("../utils/isChannelManger");
 require("dotenv").config();
 
 
 async function startSlowMode(args) {
     const { client, payload } = args
     const { user, ts, text, channel, subtype } = payload
-    const prisma = getPrisma();
 
+    if (subtype) return;
+
+    const prisma = getPrisma();
 
     const getSlowmode = await prisma.Slowmode.findFirst({
         where: {
             channel: channel,
-        }
-    })
-    if (!getSlowmode) return;
-
-    await client.chat.postMessage({
-        channel: channel,
-        text: "Slow mode is in progress!"
-    })
-
-
-    const createUser = await prisma.SlowUsers.upsert({
-        where: {
-            channel_user: { // Use the composite unique constraint
-                channel: channel,
-                user: user,
-            },
-        },
-        create: {
-            channel: channel,
-            user: user,
-            count: 0,
-        },
-        update: {
-            count: { increment: 1 },
+            locked: true
         }
     });
 
+    if (!getSlowmode) return;
+
+    const userInfo = await client.users.info({ user: user });
+    const isManager = (await getChannelManagers(channel)).includes(user);
+    const isAdmin = userInfo.user.is_admin;
+    const isExempt = isAdmin || isManager;
+    if (isExempt) return;
 
     const userData = await prisma.SlowUsers.findFirst({
         where: {
@@ -46,14 +33,57 @@ async function startSlowMode(args) {
         },
     });
 
-    
+    const now = Date.now();
 
-    console.log(userData)
-        await client.chat.postMessage({
+    if (!userData) {
+        await prisma.SlowUsers.create({
+            data: {
+                channel: channel,
+                user: user,
+                count: Math.floor(now / 1000),
+            }
+        });
+        return;
+    }
+
+    const timeSinceLastMessage = (Math.floor(now / 1000) - userData.count);
+
+    if (timeSinceLastMessage < getSlowmode.time) {
+        const timeRemaining = Math.ceil(getSlowmode.time - timeSinceLastMessage);
+
+        try {
+            await client.chat.delete({
+                channel: channel,
+                ts: ts,
+                token: process.env.SLACK_USER_TOKEN
+            });
+        } catch(e) {
+            console.error(`An error occured: ${e}`);
+        }
+
+        await client.chat.postEphemeral({
             channel: channel,
-            text: "test"
-        })
+            user: user,
+            text: `Slowmode active: you can send another message in ${timeRemaining} seconds.\n\nYour message was:\n ${text}`
+        });
+    } else {
+        await prisma.SlowUsers.upsert({
+            where: {
+                channel_user: {
+                    channel: channel,
+                    user: user,
+                },
+            },
+            create: {
+                channel: channel,
+                user: user,
+                count: Math.floor(now / 1000)
+            },
+            update: {
+                count: Math.floor(now / 1000),
+            }
+        });
+    }
 }
-
 
 module.exports = startSlowMode;

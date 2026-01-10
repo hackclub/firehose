@@ -45,7 +45,6 @@ model SlowUsers {
   channel   String?
   user      String?
   count     Int?
-  banned    Boolean? @default(false) // Fixed typo here from 'bannned' to 'banned'
   whitelist Boolean? @default(false)
 
   @@unique([channel, user])
