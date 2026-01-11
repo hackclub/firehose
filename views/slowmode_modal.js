@@ -50,8 +50,6 @@ async function slowmode_modal(args) {
             }
         });
 
-        // TODO: cancel slowmode
-
         const expiryText = expiresAt
             ? `until ${expiresAt.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: "short", dateStyle: "long" })} EST`
             : "indefinitely"
