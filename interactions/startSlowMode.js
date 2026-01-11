@@ -4,6 +4,7 @@ require("dotenv").config();
 
 
 async function startSlowMode(args) {
+    // TODO: update code to be compatible with modal approach
     const { client, payload } = args
     const { user, ts, text, channel, subtype } = payload
 

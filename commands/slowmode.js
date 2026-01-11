@@ -140,7 +140,6 @@ async function slowmode(args) {
         view: slowmodeModal
     })
 
-    // TODO: send message in firehouse logs
     // TODO: cancel slowmode
     }
 

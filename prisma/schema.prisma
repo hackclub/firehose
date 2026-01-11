@@ -34,10 +34,15 @@ model Bans {
 }
 
 model Slowmode {
-  id      Int      @id @default(autoincrement())
-  channel String   @unique
-  locked  Boolean? @default(false)
-  time    Int?
+  id        Int       @id @default(autoincrement())
+  channel   String    @unique
+  locked    Boolean?  @default(false)
+  time      Int?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  reason    String?
+  admin     String?
 }
 
 model SlowUsers {
