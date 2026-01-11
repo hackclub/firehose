@@ -58,12 +58,12 @@ async function slowmode_modal(args) {
 
         await client.chat.postMessage({
             channel: process.env.MIRRORCHANNEL,
-            text: `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in <#${channel_id}> for ${reasonText} until ${expiryText}`
+            text: `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in <#${channel_id}> for ${reasonText} ${expiryText}`
         });
 
         await client.chat.postMessage({
             channel: channel_id,
-            text: `A ${slowmodeTime} second Slowmode has been enabled in this channel until ${expiryText}`
+            text: `A ${slowmodeTime} second Slowmode has been enabled in this channel ${expiryText}`
         });
     } catch(e) {
         console.error(e);
