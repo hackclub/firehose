@@ -1,14 +1,15 @@
+// this is virtually the same as slowmode_modal.js
 const { getPrisma } = require('../utils/prismaConnector');
 require('dotenv').config();
 
-async function slowmode_modal(args) {
+async function slowmode_thread_modal(args) {
     const { ack, body, client } = args;
     const prisma = getPrisma();
 
     try {
         const view = body.view;
         const metadata = JSON.parse(view.private_metadata);
-        const { channel_id, admin_id, command_channel } = metadata;
+        const { channel_id, admin_id, command_channel, thread_ts } = metadata;
         const submittedValues = view.state.values;
         const slowmodeTime = parseInt(submittedValues.slowmode_time_block.slowmode_time_input.value);
         const slowmodeDuration = submittedValues.slowmode_duration_block.slowmode_duration_input.selected_date_time;
@@ -40,12 +41,12 @@ async function slowmode_modal(args) {
             where: {
                 channel_threadTs: {
                     channel: channel_id,
-                    threadTs: ""
+                    threadTs: thread_ts
                 }
             },
             create: {
                 channel: channel_id,
-                threadTs: "",
+                threadTs: thread_ts,
                 locked: true,
                 time: slowmodeTime,
                 expiresAt: expiresAt,
@@ -69,13 +70,13 @@ async function slowmode_modal(args) {
                 where: {
                     channel_threadTs_user: {
                         channel: channel_id,
-                        threadTs: "",
+                        threadTs: thread_ts,
                         user: userId
                     }
                 },
                 create: {
                     channel: channel_id,
-                    threadTs: "",
+                    threadTs: thread_ts,
                     user: userId,
                     whitelist: true,
                     count: 0
@@ -89,7 +90,7 @@ async function slowmode_modal(args) {
         const allWhitelistedSlowUsers = await prisma.SlowUsers.findMany({
             where: {
                 channel: channel_id,
-                threadTs: "",
+                threadTs: thread_ts,
                 whitelist: true
             }
         });
@@ -100,7 +101,7 @@ async function slowmode_modal(args) {
                     where: {
                         channel_threadTs_user: {
                             channel: channel_id,
-                            threadTs: "",
+                            threadTs: thread_ts,
                             user: slowUser.user
                         }
                     },
@@ -119,16 +120,17 @@ async function slowmode_modal(args) {
 
         await client.chat.postMessage({
             channel: process.env.MIRRORCHANNEL,
-            text: `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in <#${channel_id}> for ${reasonText} ${expiryText}`
+            text: `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in https://hackclub.slack.com/archives/${channel_id}/p${thread_ts.toString().replace(".", "")} for ${reasonText} ${expiryText}`
         });
 
         await client.chat.postMessage({
             channel: channel_id,
-            text: `A ${slowmodeTime} second Slowmode has been enabled in this channel ${expiryText}`
+            thread_ts,
+            text: `A ${slowmodeTime} second Slowmode has been enabled in this thread ${expiryText}`
         });
     } catch(e) {
         console.error(e);
     }
 }
 
-module.exports = slowmode_modal;
+module.exports = slowmode_thread_modal;

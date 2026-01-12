@@ -11,12 +11,27 @@ async function startSlowMode(args) {
 
     const prisma = getPrisma();
 
-    const getSlowmode = await prisma.Slowmode.findFirst({
-        where: {
-            channel: channel,
-            locked: true
-        }
-    });
+    let getSlowmode = null;
+
+    if (thread_ts) {
+        getSlowmode = await prisma.Slowmode.findFirst({
+            where: {
+                channel: channel,
+                threadTs: thread_ts,
+                locked: true
+            }
+        });
+    }
+
+    if (!getSlowmode) {
+        getSlowmode = await prisma.Slowmode.findFirst({
+            where: {
+                channel: channel,
+                threadTs: "",
+                locked: true
+            }
+        });
+    }
 
     if (!getSlowmode) return;
 
@@ -35,9 +50,14 @@ async function startSlowMode(args) {
             })
         ]);
 
+        const locationText = getSlowmode.threadTs
+            ? `https://hackclub.slack.com/archives/${channel}/p${thread_ts.toString().replace(".", "")}`
+            : `<#${channel}>`
+
+        // TODO: add a cron job for SlowUsers cleanup and automatic expiry messages
         await client.chat.postMessage({
             channel: process.env.MIRRORCHANNEL,
-            text: `Slowmode auto-disabled in <#${channel}> (expired)`
+            text: `Slowmode auto-disabled in ${locationText} (expired)`
         });
 
         return;
@@ -53,6 +73,7 @@ async function startSlowMode(args) {
     const userData = await prisma.SlowUsers.findFirst({
         where: {
             channel: channel,
+            threadTs: getSlowmode.threadTs,
             user: user,
         },
     });
@@ -63,6 +84,7 @@ async function startSlowMode(args) {
         await prisma.SlowUsers.create({
             data: {
                 channel: channel,
+                threadTs: getSlowmode.threadTs,
                 user: user,
                 count: Math.floor(now / 1000),
             }
@@ -93,13 +115,15 @@ async function startSlowMode(args) {
     } else {
         await prisma.SlowUsers.upsert({
             where: {
-                channel_user: {
+                channel_threadTs_user: {
                     channel: channel,
+                    threadTs: getSlowmode.threadTs,
                     user: user,
                 },
             },
             create: {
                 channel: channel,
+                threadTs: getSlowmode.threadTs,
                 user: user,
                 count: Math.floor(now / 1000)
             },

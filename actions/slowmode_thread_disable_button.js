@@ -1,3 +1,4 @@
+// this is virtually the same as slowmode_disable_button.js
 const { getPrisma } = require('../utils/prismaConnector');
 require('dotenv').config();
 
@@ -10,12 +11,13 @@ async function slowmode_disable_button(args) {
 
         const data = JSON.parse(body.actions[0].value);
         const { channel, threadTs } = data;
-        const admin_id = body.user.id;
-        const userInfo = await client.users.info({ user: admin_id });
+        const actionThreadTs = body.actions[0].value && typeof body.actions[0].value === 'string' ? JSON.parse(body.actions[0].value).threadTs : threadTs;
+        const userInfo = await client.users.info({ user: body.user.id });
         if (!userInfo.user.is_admin) {
             return await client.chat.postEphemeral({
                 channel: channel,
-                user: admin_id,
+                thread_ts: threadTs,
+                user: body.user.id,
                 text: "You must be an admin"
             });
         }
@@ -24,7 +26,7 @@ async function slowmode_disable_button(args) {
             where: {
                 channel_threadTs: {
                     channel: channel,
-                    threadTs: threadTs || ""
+                    threadTs: actionThreadTs
                 }
             }
         });
@@ -32,32 +34,34 @@ async function slowmode_disable_button(args) {
         if (!existingSlowmode || !existingSlowmode.locked) {
             return await client.chat.postEphemeral({
                 channel: channel,
-                user: admin_id,
-                text: `No active slowmode in <#${channel}>`
+                thread_ts: actionThreadTs,
+                user: body.user.id,
+                text: `No active slowmode in this thread.`
             });
         } else {
             await prisma.Slowmode.update({
                 where: {
                     channel_threadTs: {
                         channel: channel,
-                        threadTs: threadTs || ""
+                        threadTs: actionThreadTs
                     }
                 },
                 data: {
                     locked: false,
                     updatedAt: new Date(),
-                    admin: admin_id
+                    admin: body.user.id
                 }
             });
 
             await client.chat.postMessage({
                 channel: process.env.MIRRORCHANNEL,
-                text: `<@${admin_id}> turned off Slowmode in <#${channel}>`
+                text: `<@${body.user.id}> turned off Slowmode in https://hackclub.slack.com/archives/${channel}/p${actionThreadTs.toString().replace(".", "")}`
             });
 
             await client.chat.postMessage({
                 channel: channel,
-                text: "Slowmode has been turned off in this channel."
+                thread_ts: actionThreadTs,
+                text: "Slowmode has been turned off in this thread."
             })
         }
     } catch(e) {

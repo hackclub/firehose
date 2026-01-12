@@ -35,23 +35,27 @@ model Bans {
 
 model Slowmode {
   id               Int       @id @default(autoincrement())
-  channel          String    @unique
+  channel          String
   locked           Boolean?  @default(false)
   time             Int?
-  expiresAt        DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @default(now()) @updatedAt
-  reason           String?
   admin            String?
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime?
+  reason           String?
+  threadTs         String    @default("")
+  updatedAt        DateTime  @default(now()) @updatedAt
   whitelistedUsers String[]  @default([])
+
+  @@unique([channel, threadTs], name: "channel_threadTs")
 }
 
 model SlowUsers {
   id        Int      @id @default(autoincrement())
-  channel   String?
-  user      String?
+  channel   String
+  user      String
   count     Int?
   whitelist Boolean? @default(false)
+  threadTs  String   @default("")
 
-  @@unique([channel, user])
+  @@unique([channel, threadTs, user], name: "channel_threadTs_user")
 }

@@ -80,6 +80,9 @@ app.event(/.*/, handleEvent); // Catch all events dynamically
 app.action(/.*/, handleAction) // Catch all actions dynamically
 app.view(/.*/, handleViews)
 
+app.shortcut('slowmode_thread', async (args) => {
+    await require('./shortcuts/slowmode_thread')(args);
+})
 
 app.command(/.*?/, async (args) => {
 
