@@ -10,7 +10,7 @@ async function channelBan(args) {
     const userInfo = await client.users.info({ user: user_id });
     const isAdmin = userInfo.user.is_admin;
     const commands = text.split(" ");
-    const reason = commands[2]
+    const reason = commands.slice(2).join(" ");
     const userToBan = commands[0].split('|')[0].replace("<@", "");
     const channel = commands[1].split('|')[0].replace("<#", "");
     //TODO: Add temporary channel banning
