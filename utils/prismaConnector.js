@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+/** @type {PrismaClient | undefined} */
 let prismaClient;
 
 function getPrisma() {

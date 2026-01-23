@@ -1,8 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
 const { getPrisma } = require('../utils/prismaConnector');
-require('dotenv').config();
+const { env } = require('../utils/env');
 const getChannelManagers = require('../utils/isChannelManger');
 
+/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
 async function readOnly(args) {
     const { payload, client } = args;
     const { text, channel_id, user_id } = payload;
@@ -10,7 +11,7 @@ async function readOnly(args) {
     const commands = text.split(' ');
     const userInfo = await client.users.info({ user: user_id });
     const channel = commands[0].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
-    const isAdmin = (await userInfo).user.is_admin;
+    const isAdmin = userInfo.user?.is_admin;
     const channelManagers = await getChannelManagers(channel_id);
 
     const errors = [];
@@ -18,14 +19,14 @@ async function readOnly(args) {
         errors.push('Only admins can run this command.');
     if (!channel) errors.push('You need to give a channel to make it read only');
 
-    if (errors.length > 0)
+    if (errors.length > 0 || !channel)
         return await client.chat.postEphemeral({
             channel: `${channel_id}`,
             user: `${user_id}`,
             text: errors.join('\n'),
         });
 
-    const isReadOnly = await prisma.Channel.findFirst({
+    const isReadOnly = await prisma.channel.findFirst({
         where: {
             id: channel,
             readOnly: true,
@@ -34,7 +35,7 @@ async function readOnly(args) {
 
     try {
         if (!isReadOnly) {
-            await prisma.Channel.create({
+            await prisma.channel.create({
                 data: {
                     id: channel,
                     readOnly: true,
@@ -42,7 +43,7 @@ async function readOnly(args) {
                 },
             });
             await client.chat.postMessage({
-                channel: process.env.MIRRORCHANNEL,
+                channel: env.MIRRORCHANNEL,
                 text: `<#${channel}> was made read-only by <@${user_id}>`,
             });
             await client.chat.postEphemeral({
@@ -51,13 +52,13 @@ async function readOnly(args) {
                 text: `<#${channel}> has been made read only`,
             });
         } else {
-            await prisma.Channel.delete({
+            await prisma.channel.delete({
                 where: {
                     id: channel,
                 },
             });
             await client.chat.postMessage({
-                channel: process.env.MIRRORCHANNEL,
+                channel: env.MIRRORCHANNEL,
                 text: `<#${channel}> was made no longer read-only by <@${user_id}>`,
             });
         }

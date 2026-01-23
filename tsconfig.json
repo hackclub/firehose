@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "resolveJsonModule": true
+  },
+  "include": ["**/*.js", "types.d.ts"],
+  "exclude": [
+    "node_modules",
+    "interactions/lockThread.js",
+    "utils/archive.js",
+    "utils/login.js"
+  ]
+}

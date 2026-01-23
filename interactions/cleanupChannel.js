@@ -3,9 +3,13 @@ const readOnly = require('../commands/readOnly');
 const { getPrisma } = require('../utils/prismaConnector');
 require('dotenv').config();
 
+/** @param {import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs} args */
 async function cleanupChannel(args) {
     const { client, payload } = args;
-    const { user, ts, thread_ts, text, channel, subtype, bot_id } = payload;
+    if (!payload || !payload.type || payload.type !== 'message' || !('user' in payload)) return;
+    const { user, ts, text, channel, subtype } = payload;
+    const thread_ts = 'thread_ts' in payload ? payload.thread_ts : null;
+    const bot_id = 'bot_id' in payload ? payload.bot_id : null;
     const prisma = getPrisma();
     // console.log(payload)
 
@@ -15,14 +19,14 @@ async function cleanupChannel(args) {
     }
 
     const userInfo = await client.users.info({ user: user });
-    const isAdmin = userInfo.user.is_admin || userInfo.user.is_owner;
+    const isAdmin = userInfo.user?.is_admin || userInfo.user?.is_owner;
     console.log('isAdmin', isAdmin);
 
     if (isAdmin) return;
 
     console.log('Channel Cleanup Triggered');
 
-    const getChannel = await prisma.Channel.findFirst({
+    const getChannel = await prisma.channel.findFirst({
         where: {
             id: channel,
             readOnly: true,
@@ -44,7 +48,7 @@ async function cleanupChannel(args) {
     );
 
     console.log('Checking if user is allowed in channel:', channel, 'User:', user);
-    const allowlist = await prisma.Channel.findFirst({
+    const allowlist = await prisma.channel.findFirst({
         where: {
             id: channel,
             allowlist: {

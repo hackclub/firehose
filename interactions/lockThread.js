@@ -1,3 +1,5 @@
+// Work in progress, currently unused
+
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();

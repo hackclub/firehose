@@ -1,3 +1,5 @@
+// Work in progress, currently unused
+
 require('dotenv').config();
 const { App } = require('@slack/bolt');
 const app = new App({

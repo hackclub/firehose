@@ -1,8 +1,10 @@
 const { getPrisma } = require('../utils/prismaConnector');
 require('dotenv').config();
 
+/** @param {import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs} args */
 async function listenforChannelBannedUser(args) {
     const { client, payload } = args;
+    if (!payload || !payload.type || payload.type !== 'message' || !('user' in payload)) return;
     const { user, ts, text, channel, subtype } = payload;
     const prisma = getPrisma();
 
@@ -50,19 +52,15 @@ async function listenforChannelBannedUser(args) {
     //     icon_url: userData.profile_photo
     // });
 
-    try {
-        await client.chat.postEphemeral({
-            channel: mirrorChannel,
-            user: userID,
-            text: `:wave_pikachu_2: Your message was deleted because ${userData.reason}`,
-        });
-    } catch (e) {
-        await client.chat.postEphemeral({
-            channel: channel,
-            user: user,
-            text: `An error occurred: ${e}`,
-        });
-    }
+    // try {
+    //     await client.chat.postEphemeral({
+    //         channel: mirrorChannel,
+    //         user: userID,
+    //         text: `:wave_pikachu_2: Your message was deleted because ${userData.reason}`,
+    //     });
+    // } catch (e) {
+    //     console.error(`An error occurred: ${e}`);
+    // }
 }
 
 module.exports = listenforChannelBannedUser;

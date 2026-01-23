@@ -1,8 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
 const { getPrisma } = require('../utils/prismaConnector');
+const { env } = require('../utils/env');
 const getChannelManagers = require('../utils/isChannelManger');
-require('dotenv').config();
 
+/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
 async function whitelist(args) {
     const { payload, client, logger } = args;
     const { text, channel_id, user_id } = payload;
@@ -11,7 +12,7 @@ async function whitelist(args) {
     const userInfo = await client.users.info({ user: user_id });
     const channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
     const userToAdd = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
-    const isAdmin = (await userInfo).user.is_admin;
+    const isAdmin = userInfo.user?.is_admin;
     const channelManagers = await getChannelManagers(channel_id);
     console.info(channelManagers);
 
@@ -28,7 +29,7 @@ async function whitelist(args) {
             text: errors.join('\n'),
         });
 
-    const getChannel = await prisma.Channel.findFirst({
+    const getChannel = await prisma.channel.findFirst({
         where: {
             id: channel,
             readOnly: true,
@@ -40,7 +41,7 @@ async function whitelist(args) {
         console.log('this is whitelisting');
         console.log('I am trying');
         try {
-            await prisma.Channel.update({
+            await prisma.channel.update({
                 where: {
                     id: channel,
                 },
@@ -53,7 +54,7 @@ async function whitelist(args) {
         } catch (e) {
             console.log('Error:', e);
         }
-        const finalResult = await prisma.Channel.findFirst({
+        const finalResult = await prisma.channel.findFirst({
             where: {
                 id: channel,
                 readOnly: true,
@@ -65,7 +66,7 @@ async function whitelist(args) {
 
         try {
             await client.chat.postMessage({
-                channel: process.env.MIRRORCHANNEL,
+                channel: env.MIRRORCHANNEL,
                 text: `<@${user_id}> added <@${userToAdd}> to the whitelist for <#${channel}>`,
             });
         } catch (e) {

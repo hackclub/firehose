@@ -1,12 +1,15 @@
 const { getPrisma } = require('../utils/prismaConnector');
 require('dotenv').config();
 
+/** @param {import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs} args */
 async function startSlowMode(args) {
     const { client, payload } = args;
+    if (!payload || !payload.type || payload.type !== 'message' || !('user' in payload)) return;
     const { user, ts, text, channel, subtype } = payload;
+    if (!user) return;
     const prisma = getPrisma();
 
-    const getSlowmode = await prisma.Slowmode.findFirst({
+    const getSlowmode = await prisma.slowmode.findFirst({
         where: {
             channel: channel,
         },
@@ -18,7 +21,7 @@ async function startSlowMode(args) {
         text: 'Slow mode is in progress!',
     });
 
-    const createUser = await prisma.SlowUsers.upsert({
+    const createUser = await prisma.slowUsers.upsert({
         where: {
             channel_user: {
                 // Use the composite unique constraint
@@ -36,7 +39,7 @@ async function startSlowMode(args) {
         },
     });
 
-    const userData = await prisma.SlowUsers.findFirst({
+    const userData = await prisma.slowUsers.findFirst({
         where: {
             channel: channel,
             user: user,

@@ -1,3 +1,4 @@
+/** @param {{ email: string, channels: string, _customMessage?: string }} params */
 async function inviteGuestToSlack({ email, channels, _customMessage }) {
     // This is an undocumented API method found in https://github.com/ErikKalkoken/slackApiDoc/pull/70
     // Unlike the documention in that PR, we're driving it not with a legacy token but a browser storage+cookie pair
@@ -39,4 +40,4 @@ async function inviteGuestToSlack({ email, channels, _customMessage }) {
     });
 }
 
-inviteGuestToSlack('arav+idk@hackclub.com ', '#blahaj-and-chai');
+inviteGuestToSlack({ email: 'arav+idk@hackclub.com ', channels: '#blahaj-and-chai' });

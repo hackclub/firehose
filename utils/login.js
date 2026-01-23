@@ -1,6 +1,9 @@
+// Work in progress, currently unused
+
 const puppeteer = require('puppeteer');
 require('dotenv').config();
 
+/** @param {string} user_email */
 const hackclubSignup = async (user_email) => {
     // Launch browser
     const browser = await puppeteer.launch({ headless: false }); // Set headless to true for production  // Open a new page

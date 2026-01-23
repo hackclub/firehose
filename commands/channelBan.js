@@ -1,20 +1,22 @@
-const chrono = require('chrono-node');
+// const chrono = require('chrono-node');
 const { getPrisma } = require('../utils/prismaConnector');
+const { env } = require('../utils/env');
 
+/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
 async function channelBan(args) {
     const { payload, client } = args;
     const { user_id, text, channel_id } = payload;
     const prisma = getPrisma();
 
     const userInfo = await client.users.info({ user: user_id });
-    const isAdmin = userInfo.user.is_admin;
+    const isAdmin = userInfo.user?.is_admin;
     const commands = text.split(' ');
     const reason = commands.slice(2).join(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
     const channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
     console.log(text, commands, userToBan, channel, reason);
     //TODO: Add temporary channel banning
-    const time = chrono.parse(`${commands[3]}`);
+    // const time = chrono.parse(`${commands[3]}`);
 
     // const userProfile = await client.users.profile.get({ user: userToBan });
     // const profilePhoto = userProfile.profile.image_512;
@@ -26,7 +28,7 @@ async function channelBan(args) {
     if (!userToBan) errors.push('A user is required');
     if (!channel) errors.push('A channel is required');
 
-    if (errors.length > 0)
+    if (errors.length > 0 || !userToBan || !channel)
         return await client.chat.postEphemeral({
             channel: `${channel_id}`,
             user: `${user_id}`,
@@ -35,7 +37,7 @@ async function channelBan(args) {
 
     try {
         await client.chat.postMessage({
-            channel: process.env.MIRRORCHANNEL,
+            channel: env.MIRRORCHANNEL,
             text: `<@${user_id}> banned <@${userToBan}> from <#${channel}> for ${reason}`,
         });
 
@@ -57,7 +59,6 @@ async function channelBan(args) {
             channel: channel_id,
             user: user_id,
             text: `<@${userToBan}> has been banned from <#${channel}> for ${reason}`,
-            mrkdwn: true,
         });
     } catch (e) {
         await client.chat.postEphemeral({

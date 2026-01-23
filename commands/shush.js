@@ -1,12 +1,14 @@
 const { getPrisma } = require('../utils/prismaConnector');
+const { env } = require('../utils/env');
 
+/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
 async function shushBan(args) {
     const { payload, client } = args;
     const { user_id, text, channel_id } = payload;
     const prisma = getPrisma();
 
     const userInfo = await client.users.info({ user: user_id });
-    const isAdmin = userInfo.user.is_admin;
+    const isAdmin = userInfo.user?.is_admin;
     const commands = text.split(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
     const reason = commands.slice(1).join(' ');
@@ -20,8 +22,9 @@ async function shushBan(args) {
     if (!reason) errors.push('A reason is required.');
     if (!userToBan) errors.push('A user is required');
 
-    if (errors.length > 0)
+    if (errors.length > 0 || !userToBan)
         return await client.chat.postEphemeral({
+            channel: channel_id,
             user: `${user_id}`,
             text: errors.join('\n'),
         });
@@ -29,7 +32,7 @@ async function shushBan(args) {
     try {
         if (isAdmin) {
             await client.chat.postMessage({
-                channel: process.env.MIRRORCHANNEL,
+                channel: env.MIRRORCHANNEL,
                 text: `<@${user_id}> shushed <@${userToBan}> from all Slack channels. ${reason ? `for ${reason}` : ''}`,
             });
         }
@@ -63,7 +66,6 @@ async function shushBan(args) {
                 channel: channel_id,
                 user: user_id,
                 text: `<@${userToBan}> has been shushed from all channels for ${reason}`,
-                mrkdwn: true,
             });
         }
     } catch (e) {

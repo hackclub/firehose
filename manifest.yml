@@ -1,88 +1,107 @@
 display_information:
-  name: Firehose
-  description: A moderation helper bot
-  background_color: "#ff4d00"
+    name: Firehose
+    description: A moderation helper bot
+    background_color: '#ff4d00'
 features:
-  app_home:
-    home_tab_enabled: true
-    messages_tab_enabled: true
-    messages_tab_read_only_enabled: true
-  bot_user:
-    display_name: Firehose
-    always_online: false
-  shortcuts:
-    - name: Lock the thread
-      type: message
-      callback_id: lock_thread
-      description: Locks threads
-  slash_commands:
-    - command: /channelban
-      url: https://firehose.hackclub.com/slack/events
-      description: ban a user from a channel
-      usage_hint: "[channel] [user] [reason]"
-      should_escape: true
-    - command: /unban
-      url: https://firehose.hackclub.com/slack/events
-      description: unban user from channel
-      should_escape: true
-    - command: /read-only
-      url: https://firehose.hackclub.com/slack/events
-      description: makes channels read only
-      usage_hint: "[channel]"
-      should_escape: true
-    - command: /slowmode
-      url: https://firehose.hackclub.com/slack/events
-      description: slowmode
-      should_escape: true
-    - command: /banlist
-      url: https://firehose.hackclub.com/slack/events
-      description: bans
-      should_escape: false
-    - command: /shush
-      url: https://firehose.hackclub.com/slack/events
-      description: shush @person reason
-      should_escape: true
+    app_home:
+        home_tab_enabled: true
+        messages_tab_enabled: false
+        messages_tab_read_only_enabled: true
+    bot_user:
+        display_name: Firehose
+        always_online: false
+    shortcuts:
+        - name: Lock the thread
+          type: message
+          callback_id: lock_thread
+          description: Locks threads
+    slash_commands:
+        - command: /channelban
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: ban a user from a channel
+          usage_hint: '[user] [channel] [reason]'
+          should_escape: true
+        - command: /unban
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: unban user from channel
+          usage_hint: '[user] [channel]'
+          should_escape: true
+        - command: /read-only
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: makes channels read only
+          usage_hint: '[channel]'
+          should_escape: true
+        - command: /slowmode
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: slowmode
+          should_escape: true
+        - command: /banlist
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: bans
+          should_escape: false
+        - command: /shush
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: shush @person reason
+          usage_hint: '[user] [reason]'
+          should_escape: true
+        - command: /whitelist
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: 'whitelist'
+          usage_hint: '@user'
+          should_escape: true
+        - command: /unshush
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: unmute
+          usage_hint: '@user'
+          should_escape: true
+        - command: /purge
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: count
+          usage_hint: count
+          should_escape: false
 oauth_config:
-  scopes:
-    user:
-      - chat:write
-      - channels:write
-    bot:
-      - app_mentions:read
-      - channels:history
-      - channels:manage
-      - channels:read
-      - chat:write
-      - chat:write.customize
-      - chat:write.public
-      - commands
-      - files:read
-      - groups:history
-      - groups:read
-      - groups:write
-      - im:history
-      - im:read
-      - im:write
-      - metadata.message:read
-      - mpim:read
-      - reactions:read
-      - reactions:write
-      - users.profile:read
-      - users:read
-      - users:read.email
-      - channels:join
+    scopes:
+        user:
+            - chat:write
+            - channels:write
+        bot:
+            - app_mentions:read
+            - channels:history
+            - channels:manage
+            - channels:read
+            - chat:write
+            - chat:write.customize
+            - chat:write.public
+            - commands
+            - files:read
+            - groups:history
+            - groups:read
+            - groups:write
+            - im:history
+            - im:read
+            - im:write
+            - metadata.message:read
+            - mpim:read
+            - reactions:read
+            - reactions:write
+            - users.profile:read
+            - users:read
+            - users:read.email
+            - channels:join
+            - incoming-webhook
 settings:
-  event_subscriptions:
-    request_url: https://channel-mod-tools-hackclub-37801e4e9945.herokuapp.com/slack/events
-    bot_events:
-      - app_mention
-      - channel_created
-      - message.channels
-      - message.groups
-  interactivity:
-    is_enabled: true
-    request_url: https://channel-mod-tools-hackclub-37801e4e9945.herokuapp.com/slack/eventsq
-    message_menu_options_url: https://channel-mod-tools-hackclub-37801e4e9945.herokuapp.com/slack/events
-  org_deploy_enabled: false
-  socket_mode_enabled: false
-  token_rotation_enabled: false
+    event_subscriptions:
+        request_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+        bot_events:
+            - app_mention
+            - channel_created
+            - channel_left
+            - message.channels
+            - message.groups
+    interactivity:
+        is_enabled: true
+        request_url: https://channel-mod-tools-hackclub-37801e4e9945.herokuapp.com/slack/events
+        message_menu_options_url: https://channel-mod-tools-hackclub-37801e4e9945.herokuapp.com/slack/events
+    org_deploy_enabled: false
+    socket_mode_enabled: false
+    token_rotation_enabled: false

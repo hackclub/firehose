@@ -17,7 +17,6 @@
   "devDependencies": {
     "nodemon": "^3.1.11",
     "prettier": "^3.8.1",
-    "prisma": "^5.16.1",
-    "typescript": "^5.6.3"
+    "prisma": "^5.16.1"
   }
 }
