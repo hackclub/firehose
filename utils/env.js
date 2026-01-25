@@ -10,7 +10,11 @@ function requireEnv(name) {
     return value;
 }
 
-process.loadEnvFile();
+try {
+    process.loadEnvFile();
+} catch (e) {
+    // ignore
+}
 const env = {
     SLACK_SIGNING_SECRET: requireEnv('SLACK_SIGNING_SECRET'),
     SLACK_BOT_TOKEN: requireEnv('SLACK_BOT_TOKEN'),
