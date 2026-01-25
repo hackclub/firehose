@@ -25,7 +25,7 @@ async function purge(args) {
         if (!user.ok) return respond(`:x: User \`${userId}\` does not exist.`);
         if (user.user?.is_admin)
             return respond(
-                `:x: User <@${userId}> is  an admin. Cannot directly purge messages from admin.`
+                `:x: User <@${userId}> is an admin. Cannot directly purge messages from admin.`
             );
     }
 
@@ -38,43 +38,50 @@ async function purge(args) {
     });
     const currentMessages = await client.conversations.history({
         channel: channel_id,
-        limit: amount || 100,
+        limit: amount + 1,
     });
-    let cleared_messages = 0;
-    for (const msg of currentMessages.messages ?? []) {
-        if (userId) {
-            if (msg.user !== userId) continue;
-        }
-        if (cleared_messages >= amount) break;
-        if (msg.ts === purgeMessage.ts) continue;
-        if (!msg.ts) continue;
+
+    const messagesToDelete = (currentMessages.messages ?? [])
+        .filter((msg) => {
+            if (!msg.ts) return false;
+            if (msg.ts === purgeMessage.ts) return false;
+            if (userId && msg.user !== userId) return false;
+            return true;
+        })
+        .slice(0, amount);
+
+    let deleted = 0;
+    let failed = 0;
+    for (const msg of messagesToDelete) {
         try {
+            if (!msg.ts) throw new Error('Message missing ts'); // should not happen
             await client.chat.delete({
+                token: env.SLACK_USER_TOKEN,
                 channel: channel_id,
                 ts: msg.ts,
             });
-            cleared_messages++;
+            deleted++;
         } catch (e) {
-            console.error(e);
+            failed++;
+            console.error(`Failed to delete message ${msg.ts}:`, e);
         }
     }
+
     if (!purgeMessage.ts) return;
+    const elapsed = Math.floor((Date.now() - stamp) / 1000);
     await Promise.all([
-        client.chat.postMessage({
+        client.chat.update({
             channel: channel_id,
-            reply_broadcast: true,
-            thread_ts: purgeMessage.ts,
-            text: `:white_check_mark: Purged \`${cleared_messages}\` messages ${
-                userId ? `from user <@${userId}>` : ''
-            }\nTook \`${Math.floor((Date.now() - stamp) / 1000)}s\``,
+            ts: purgeMessage.ts,
+            text: `:white_check_mark: Purged \`${deleted}/${messagesToDelete.length}\` messages${
+                userId ? ` from <@${userId}>` : ''
+            }${failed ? ` (${failed} failed)` : ''} in \`${elapsed}s\``,
         }),
         client.chat.postMessage({
             channel: env.MIRRORCHANNEL,
-            text: `<@${user_id}> requested to purge \`${amount}\` messages ${
-                userId ? `from <@${userId}>` : ''
-            }\n\`${cleared_messages}\` messages were removed correctly, Took \`${Math.floor(
-                (Date.now() - stamp) / 1000
-            )}s\`. `,
+            text: `<@${user_id}> purged \`${deleted}/${messagesToDelete.length}\` messages${
+                userId ? ` from <@${userId}>` : ''
+            }${failed ? ` (${failed} failed)` : ''} in \`${elapsed}s\``,
         }),
     ]);
 }
