@@ -39,6 +39,10 @@ async function enforceSlowMode(args) {
                 locked: true,
             },
         });
+
+        if (slowmodeConfig && thread_ts && !slowmodeConfig.applyToThreads) {
+            return;
+        }
     }
 
     if (!slowmodeConfig) return;

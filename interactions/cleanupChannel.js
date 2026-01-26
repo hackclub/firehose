@@ -59,8 +59,8 @@ async function cleanupChannel(args) {
 
     if (!getChannel) return;
 
-        // console.log('Channel is read-only, checking message timestamps:', ts, thread_ts);
-        // console.log('Allowlist status:', allowlist ? 'User is allowed' : 'User is not allowed');
+    // console.log('Channel is read-only, checking message timestamps:', ts, thread_ts);
+    // console.log('Allowlist status:', allowlist ? 'User is allowed' : 'User is not allowed');
 
     if (thread_ts) {
         // console.log("Message is in a thread, checking if it's a broadcast thread");

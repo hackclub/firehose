@@ -9,7 +9,7 @@ async function slowmode(args) {
     const commands = text.split(' ');
     const userInfo = await client.users.info({ user: user_id });
     const isAdmin = userInfo.user?.is_admin;
-    const channelManagers = await getChannelManagers(channel_id);
+    // const channelManagers = await getChannelManagers(channel_id);
 
     let channel = channel_id;
     if (commands[0] && commands[0].includes('#')) {
@@ -38,6 +38,7 @@ async function slowmode(args) {
         ? Math.floor(existingSlowmode.expiresAt.getTime() / 1000)
         : undefined;
     const defaultWhitelist = existingSlowmode?.whitelistedUsers || [];
+    const defaultApplyToThreads = existingSlowmode?.applyToThreads || false;
 
     // using a modal-based approach similar to definite threadlocker
     /** @type {import('@slack/types').View} */
@@ -154,6 +155,43 @@ async function slowmode(args) {
                 hint: {
                     type: 'plain_text',
                     text: 'These users will be immune to slowmode',
+                },
+            },
+            {
+                type: 'input',
+                block_id: 'slowmode_apply_to_threads_block',
+                optional: true,
+                element: {
+                    type: 'checkboxes',
+                    action_id: 'slowmode_apply_to_threads_input',
+                    options: [
+                        {
+                            text: {
+                                type: 'plain_text',
+                                text: 'Apply to threads',
+                            },
+                            value: 'apply_to_threads',
+                        },
+                    ],
+                    ...(defaultApplyToThreads && {
+                        initial_options: [
+                            {
+                                text: {
+                                    type: 'plain_text',
+                                    text: 'Apply to threads',
+                                },
+                                value: 'apply_to_threads',
+                            },
+                        ],
+                    }),
+                },
+                label: {
+                    type: 'plain_text',
+                    text: 'Thread settings',
+                },
+                hint: {
+                    type: 'plain_text',
+                    text: 'When enabled, slowmode will also apply to all threads in the channel',
                 },
             },
             {

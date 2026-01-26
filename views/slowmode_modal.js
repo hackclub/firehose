@@ -22,6 +22,13 @@ async function slowmode_modal(args) {
         /** @type {string[]} */
         const whitelistedUsers =
             submittedValues.slowmode_whitelist_block.slowmode_whitelist_input.selected_users || [];
+        /** @type {{ value: string }[]} */
+        const applyToThreadsOptions =
+            submittedValues.slowmode_apply_to_threads_block?.slowmode_apply_to_threads_input
+                ?.selected_options || [];
+        const applyToThreads = applyToThreadsOptions.some(
+            (opt) => opt.value === 'apply_to_threads'
+        );
         /** @type {Record<string, string>} */
         const errors = {};
 
@@ -61,6 +68,7 @@ async function slowmode_modal(args) {
                 reason: reason,
                 admin: admin_id,
                 whitelistedUsers: whitelistedUsers,
+                applyToThreads: applyToThreads,
             },
             update: {
                 locked: true,
@@ -69,6 +77,7 @@ async function slowmode_modal(args) {
                 reason: reason,
                 admin: admin_id,
                 whitelistedUsers: whitelistedUsers,
+                applyToThreads: applyToThreads,
                 updatedAt: new Date(),
             },
         });
@@ -109,15 +118,16 @@ async function slowmode_modal(args) {
             : 'indefinitely';
 
         const reasonText = reason ? `${reason}` : '(none provided)';
+        const threadText = applyToThreads ? ' (including threads)' : '';
 
         await client.chat.postMessage({
             channel: env.MIRRORCHANNEL,
-            text: `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in <#${channel_id}> for ${reasonText} ${expiryText}`,
+            text: `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in <#${channel_id}>${threadText} for ${reasonText} ${expiryText}`,
         });
 
         await client.chat.postMessage({
             channel: channel_id,
-            text: `A ${slowmodeTime} second Slowmode has been enabled in this channel ${expiryText}`,
+            text: `A ${slowmodeTime} second Slowmode has been enabled in this channel${threadText} ${expiryText}`,
         });
     } catch (e) {
         console.error(e);

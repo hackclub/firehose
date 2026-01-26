@@ -45,6 +45,7 @@ model Slowmode {
   threadTs         String    @default("")
   updatedAt        DateTime  @default(now()) @updatedAt
   whitelistedUsers String[]  @default([])
+  applyToThreads   Boolean   @default(false)
 
   @@unique([channel, threadTs], name: "channel_threadTs")
 }
