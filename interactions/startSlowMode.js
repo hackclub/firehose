@@ -2,6 +2,11 @@ const { getPrisma } = require('../utils/prismaConnector');
 const getChannelManagers = require('../utils/isChannelManger');
 const { env } = require('../utils/env');
 
+// Use a cache for user info so a very fast thread (or someone spamming) doesn't hit rate limits
+/** @type {Map<string, {isAdmin: boolean, expiresAt: number}>} */
+const userInfoCache = new Map();
+const USER_CACHE_TTL_MS = 60 * 1000;
+
 /** @param {import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs} args */
 async function startSlowMode(args) {
     const { client, payload } = args;
@@ -67,9 +72,16 @@ async function startSlowMode(args) {
         return;
     }
 
-    const userInfo = await client.users.info({ user: user });
+    const cached = userInfoCache.get(user);
+    let isAdmin;
+    if (cached && cached.expiresAt > Date.now()) {
+        isAdmin = cached.isAdmin;
+    } else {
+        const userInfo = await client.users.info({ user: user });
+        isAdmin = userInfo.user?.is_admin || false;
+        userInfoCache.set(user, { isAdmin, expiresAt: Date.now() + USER_CACHE_TTL_MS });
+    }
     const isManager = (await getChannelManagers(channel)).includes(user);
-    const isAdmin = userInfo.user?.is_admin;
     const isWhitelisted = getSlowmode.whitelistedUsers?.includes(user) || false;
     const isExempt = isAdmin || isManager || isWhitelisted;
     if (isExempt) return;

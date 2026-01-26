@@ -10,12 +10,9 @@ async function slowmode_thread_disable_button(args) {
     try {
         await ack();
 
+        /** @type {{ channel: string, threadTs: string }} */
         const data = JSON.parse(actions[0].value || '{}');
         const { channel, threadTs } = data;
-        const actionThreadTs =
-            actions[0].value && typeof actions[0].value === 'string'
-                ? JSON.parse(actions[0].value).threadTs
-                : threadTs;
         const userInfo = await client.users.info({ user: body.user.id });
         if (!userInfo.user?.is_admin) {
             return await client.chat.postEphemeral({
@@ -30,7 +27,7 @@ async function slowmode_thread_disable_button(args) {
             where: {
                 channel_threadTs: {
                     channel: channel,
-                    threadTs: actionThreadTs,
+                    threadTs,
                 },
             },
         });
@@ -38,7 +35,7 @@ async function slowmode_thread_disable_button(args) {
         if (!existingSlowmode || !existingSlowmode.locked) {
             return await client.chat.postEphemeral({
                 channel: channel,
-                thread_ts: actionThreadTs,
+                thread_ts: threadTs,
                 user: body.user.id,
                 text: `No active slowmode in this thread.`,
             });
@@ -47,7 +44,7 @@ async function slowmode_thread_disable_button(args) {
                 where: {
                     channel_threadTs: {
                         channel: channel,
-                        threadTs: actionThreadTs,
+                        threadTs,
                     },
                 },
                 data: {
@@ -59,12 +56,12 @@ async function slowmode_thread_disable_button(args) {
 
             await client.chat.postMessage({
                 channel: env.MIRRORCHANNEL,
-                text: `<@${body.user.id}> turned off Slowmode in https://hackclub.slack.com/archives/${channel}/p${actionThreadTs.toString().replace('.', '')}`,
+                text: `<@${body.user.id}> turned off Slowmode in https://hackclub.slack.com/archives/${channel}/p${threadTs.toString().replace('.', '')}`,
             });
 
             await client.chat.postMessage({
                 channel: channel,
-                thread_ts: actionThreadTs,
+                thread_ts: threadTs,
                 text: 'Slowmode has been turned off in this thread.',
             });
         }

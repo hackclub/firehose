@@ -19,6 +19,7 @@ async function slowmode_thread_modal(args) {
         const slowmodeDuration =
             submittedValues.slowmode_duration_block.slowmode_duration_input.selected_date_time;
         const reason = submittedValues.slowmode_reason_block.slowmode_reason_input.value || '';
+        /** @type {string[]} */
         const whitelistedUsers =
             submittedValues.slowmode_whitelist_block.slowmode_whitelist_input.selected_users || [];
         /** @type {Record<string, string>} */
@@ -72,52 +73,36 @@ async function slowmode_thread_modal(args) {
             },
         });
 
-        for (const userId of whitelistedUsers) {
-            await prisma.slowUsers.upsert({
+        await prisma.$transaction([
+            prisma.slowUsers.updateMany({
                 where: {
-                    channel_threadTs_user: {
-                        channel: channel_id,
-                        threadTs: thread_ts,
-                        user: userId,
-                    },
-                },
-                create: {
                     channel: channel_id,
                     threadTs: thread_ts,
-                    user: userId,
                     whitelist: true,
-                    count: 0,
+                    user: { notIn: whitelistedUsers },
                 },
-                update: {
-                    whitelist: true,
-                },
-            });
-        }
-
-        const allWhitelistedSlowUsers = await prisma.slowUsers.findMany({
-            where: {
-                channel: channel_id,
-                threadTs: thread_ts,
-                whitelist: true,
-            },
-        });
-
-        for (const slowUser of allWhitelistedSlowUsers) {
-            if (!whitelistedUsers.includes(slowUser.user)) {
-                await prisma.slowUsers.update({
+                data: { whitelist: false },
+            }),
+            ...whitelistedUsers.map((userId) =>
+                prisma.slowUsers.upsert({
                     where: {
                         channel_threadTs_user: {
                             channel: channel_id,
                             threadTs: thread_ts,
-                            user: slowUser.user,
+                            user: userId,
                         },
                     },
-                    data: {
-                        whitelist: false,
+                    create: {
+                        channel: channel_id,
+                        threadTs: thread_ts,
+                        user: userId,
+                        whitelist: true,
+                        count: 0,
                     },
-                });
-            }
-        }
+                    update: { whitelist: true },
+                })
+            ),
+        ]);
 
         const expiryText = expiresAt
             ? `until ${expiresAt.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST`
