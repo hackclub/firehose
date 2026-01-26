@@ -60,3 +60,26 @@ model SlowUsers {
 
   @@unique([channel, threadTs, user], name: "channel_threadTs_user")
 }
+
+model Thread {
+  id        String    @id @unique
+  createdAt DateTime  @default(now())
+  admin     String
+  lock_type String
+  time      DateTime?
+  reason    String
+  channel   String?
+  active    Boolean?
+}
+
+model Log {
+  id        String    @id @unique @default(nanoid())
+  thread_id String
+  createdAt DateTime  @default(now())
+  admin     String
+  lock_type String
+  time      DateTime?
+  reason    String
+  channel   String?
+  active    Boolean?
+}

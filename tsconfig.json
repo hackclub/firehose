@@ -12,5 +12,5 @@
         "resolveJsonModule": true
     },
     "include": ["**/*.js", "types.d.ts"],
-    "exclude": ["node_modules", "interactions/lockThread.js", "utils/archive.js", "utils/login.js"]
+    "exclude": ["node_modules"]
 }
