@@ -47,12 +47,12 @@ receiver.router.use(express.json());
 receiver.router.get('/', indexEndpoint);
 receiver.router.get('/ping', pingEndpoint);
 
-if (!isDevMode) {
-    app.client.chat.postMessage({
-        channel: env.MIRRORCHANNEL,
-        text: `Firehose is online again!`,
-    });
-}
+// if (!isDevMode) {
+//     app.client.chat.postMessage({
+//         channel: env.MIRRORCHANNEL,
+//         text: `Firehose is online again!`,
+//     });
+// }
 
 app.event('channel_created', async ({ event, client }) => {
     if (isDevMode) return;
