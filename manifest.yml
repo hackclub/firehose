@@ -15,6 +15,10 @@ features:
           type: message
           callback_id: lock_thread
           description: Locks threads
+        - name: Slowmode thread
+          type: message
+          callback_id: slowmode_thread
+          description: Enable slowmode on a thread
     slash_commands:
         - command: /channelban
           url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
