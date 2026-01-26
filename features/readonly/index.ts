@@ -1,14 +1,11 @@
-const command = require('./command');
-const whitelist = require('./whitelist');
-const listener = require('./listener');
+import type { App } from '@slack/bolt';
+import command from './command.js';
+import whitelist from './whitelist.js';
+import listener from './listener.js';
 
-/** @param {import('@slack/bolt').App} app */
-function register(app) {
-    app.command(/\/.*read-only$/, command);
-    app.command(/\/.*whitelist$/, whitelist);
+function register(app: App) {
+    app.command(/\/(.*dev-)?read-only$/, command);
+    app.command(/\/(.*dev-)?whitelist$/, whitelist);
 }
 
-module.exports = {
-    register,
-    messageListener: listener,
-};
+export { register, listener as messageListener };

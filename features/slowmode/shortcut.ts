@@ -1,8 +1,12 @@
-const { getPrisma, isUserAdmin, postEphemeral } = require('../../utils');
+import type { SlackShortcutMiddlewareArgs, SlackShortcut, AllMiddlewareArgs } from '@slack/bolt';
+import type { View } from '@slack/types';
+import { getPrisma, isUserAdmin, postEphemeral } from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackShortcutMiddlewareArgs<import('@slack/bolt').SlackShortcut> & import('@slack/bolt').AllMiddlewareArgs} args */
-async function slowmodeThreadShortcut(args) {
-    const { ack, body, client } = args;
+async function slowmodeThreadShortcut({
+    ack,
+    body,
+    client,
+}: SlackShortcutMiddlewareArgs<SlackShortcut> & AllMiddlewareArgs) {
     if (!body || body.type !== 'message_action') {
         return;
     }
@@ -37,8 +41,7 @@ async function slowmodeThreadShortcut(args) {
         : undefined;
     const defaultWhitelist = existingSlowmode?.whitelistedUsers || [];
 
-    /** @type {import('@slack/types').View} */
-    const slowmodeModal = /** @type {any} */ ({
+    const slowmodeModal: View = {
         type: 'modal',
         callback_id: 'slowmode_thread_modal',
         private_metadata: JSON.stringify({
@@ -171,7 +174,7 @@ async function slowmodeThreadShortcut(args) {
                 ],
             },
         ],
-    });
+    } as View;
 
     await client.views.open({
         trigger_id: trigger_id,
@@ -179,4 +182,4 @@ async function slowmodeThreadShortcut(args) {
     });
 }
 
-module.exports = slowmodeThreadShortcut;
+export default slowmodeThreadShortcut;

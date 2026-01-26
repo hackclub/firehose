@@ -1,12 +1,12 @@
-const command = require('./command');
-const shortcut = require('./shortcut');
-const listener = require('./listener');
-const { slowmodeModal, slowmodeThreadModal } = require('./modal');
-const { slowmodeDisableButton, slowmodeThreadDisableButton } = require('./actions');
+import type { App } from '@slack/bolt';
+import command from './command.js';
+import shortcut from './shortcut.js';
+import listener from './listener.js';
+import { slowmodeModal, slowmodeThreadModal } from './modal.js';
+import { slowmodeDisableButton, slowmodeThreadDisableButton } from './actions.js';
 
-/** @param {import('@slack/bolt').App} app */
-function register(app) {
-    app.command(/\/.*slowmode$/, command);
+function register(app: App) {
+    app.command(/\/(.*dev-)?slowmode$/, command);
     app.shortcut('slowmode_thread', shortcut);
     app.action('slowmode_disable_button', slowmodeDisableButton);
     app.action('slowmode_thread_disable_button', slowmodeThreadDisableButton);
@@ -14,7 +14,4 @@ function register(app) {
     app.view('slowmode_thread_modal', slowmodeThreadModal);
 }
 
-module.exports = {
-    register,
-    messageListener: listener,
-};
+export { register, listener as messageListener };

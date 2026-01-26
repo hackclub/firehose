@@ -1,9 +1,10 @@
-const { getPrisma, deleteMessage, postEphemeral } = require('../../utils');
-const { userClient } = require('../../client');
+import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import { getPrisma, deleteMessage, postEphemeral } from '../../utils/index.js';
+import { userClient } from '../../client.js';
 
-/** @param {import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs} args */
-async function listenForChannelBannedUser(args) {
-    const { payload } = args;
+async function listenForChannelBannedUser({
+    payload,
+}: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs) {
     if (!payload || !payload.type || payload.type !== 'message' || !('user' in payload)) return;
     const { user, ts, text, channel, subtype } = payload;
     const prisma = getPrisma();
@@ -38,4 +39,4 @@ async function listenForChannelBannedUser(args) {
     ]);
 }
 
-module.exports = listenForChannelBannedUser;
+export default listenForChannelBannedUser;

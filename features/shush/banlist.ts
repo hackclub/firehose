@@ -1,14 +1,16 @@
-const { getPrisma, isUserAdmin } = require('../../utils');
+import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import { getPrisma, isUserAdmin } from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function banListCommand(args) {
-    const { payload } = args;
-    const { user_id, text, channel_id } = payload;
+async function banListCommand({
+    payload: { user_id, channel_id },
+    ack,
+}: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
+    await ack();
     const prisma = getPrisma();
 
     const isAdmin = await isUserAdmin(user_id);
 
-    const errors = [];
+    const errors: string[] = [];
     if (!isAdmin) errors.push('Only admins can run this command.');
 
     const channelBans = await prisma.user.findMany();
@@ -19,4 +21,4 @@ async function banListCommand(args) {
     console.log(shushBans);
 }
 
-module.exports = banListCommand;
+export default banListCommand;

@@ -1,10 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
-/** @type {PrismaClient | undefined} */
-let prismaClient;
+import { PrismaClient } from '@prisma/client';
 
-function getPrisma() {
+let prismaClient: PrismaClient | undefined;
+
+export function getPrisma(): PrismaClient {
     if (!prismaClient) prismaClient = new PrismaClient();
     return prismaClient;
 }
-
-module.exports = { getPrisma };

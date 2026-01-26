@@ -1,14 +1,11 @@
-const command = require('./command');
-const unban = require('./unban');
-const listener = require('./listener');
+import type { App } from '@slack/bolt';
+import command from './command.js';
+import unban from './unban.js';
+import listener from './listener.js';
 
-/** @param {import('@slack/bolt').App} app */
-function register(app) {
-    app.command(/\/.*channelban$/, command);
-    app.command(/\/.*unban$/, unban);
+function register(app: App) {
+    app.command(/\/(.*dev-)?channelban$/, command);
+    app.command(/\/(.*dev-)?unban$/, unban);
 }
 
-module.exports = {
-    register,
-    messageListener: listener,
-};
+export { register, listener as messageListener };

@@ -1,25 +1,19 @@
-const { client, userClient } = require('../../client');
+import { client, userClient } from '../../client.js';
+import type { ChatPostMessageResponse } from '@slack/web-api';
 
-/**
- * @param {string} channel
- * @param {string} ts
- * @returns {Promise<void>}
- */
-async function deleteMessage(channel, ts) {
+export async function deleteMessage(channel: string, ts: string): Promise<void> {
     await userClient.chat.delete({
         channel,
         ts,
     });
 }
 
-/**
- * @param {string} channel
- * @param {string} user
- * @param {string} text
- * @param {string} [thread_ts]
- * @returns {Promise<void>}
- */
-async function postEphemeral(channel, user, text, thread_ts) {
+export async function postEphemeral(
+    channel: string,
+    user: string,
+    text: string,
+    thread_ts?: string
+): Promise<void> {
     await client.chat.postEphemeral({
         channel,
         user,
@@ -28,13 +22,11 @@ async function postEphemeral(channel, user, text, thread_ts) {
     });
 }
 
-/**
- * @param {string} channel
- * @param {string} text
- * @param {string} [thread_ts]
- * @returns {Promise<import('@slack/web-api').ChatPostMessageResponse>}
- */
-async function postMessage(channel, text, thread_ts) {
+export async function postMessage(
+    channel: string,
+    text: string,
+    thread_ts?: string
+): Promise<ChatPostMessageResponse> {
     return await client.chat.postMessage({
         channel,
         text,
@@ -42,13 +34,7 @@ async function postMessage(channel, text, thread_ts) {
     });
 }
 
-/**
- * @param {string} channel
- * @param {string} name
- * @param {string} timestamp
- * @returns {Promise<void>}
- */
-async function addReaction(channel, name, timestamp) {
+export async function addReaction(channel: string, name: string, timestamp: string): Promise<void> {
     try {
         await client.reactions.add({
             channel,
@@ -60,13 +46,11 @@ async function addReaction(channel, name, timestamp) {
     }
 }
 
-/**
- * @param {string} channel
- * @param {string} name
- * @param {string} timestamp
- * @returns {Promise<void>}
- */
-async function removeReaction(channel, name, timestamp) {
+export async function removeReaction(
+    channel: string,
+    name: string,
+    timestamp: string
+): Promise<void> {
     try {
         await client.reactions.remove({
             channel,
@@ -77,11 +61,3 @@ async function removeReaction(channel, name, timestamp) {
         // Reaction may not exist
     }
 }
-
-module.exports = {
-    deleteMessage,
-    postEphemeral,
-    postMessage,
-    addReaction,
-    removeReaction,
-};

@@ -1,7 +1,7 @@
-const { WebClient } = require('@slack/web-api');
-const { env } = require('./utils');
+import { WebClient } from '@slack/web-api';
+import { env } from './utils/index.js';
 
 const client = new WebClient(env.SLACK_BOT_TOKEN);
 const userClient = new WebClient(env.SLACK_USER_TOKEN);
 
-module.exports = { client, userClient };
+export { client, userClient };

@@ -1,15 +1,11 @@
-const shushCommand = require('./shush');
-const unshushCommand = require('./unshush');
-// const banlist = require('./banlist');
-const listener = require('./listener');
+import type { App } from '@slack/bolt';
+import shushCommand from './shush.js';
+import unshushCommand from './unshush.js';
+import listener from './listener.js';
 
-/** @param {import('@slack/bolt').App} app */
-function register(app) {
-    app.command(/\/.*shush$/, shushCommand);
-    app.command(/\/.*unshush$/, unshushCommand);
+function register(app: App) {
+    app.command(/\/(.*dev-)?shush$/, shushCommand);
+    app.command(/\/(.*dev-)?unshush$/, unshushCommand);
 }
 
-module.exports = {
-    register,
-    messageListener: listener,
-};
+export { register, listener as messageListener };

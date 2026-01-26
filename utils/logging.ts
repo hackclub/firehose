@@ -1,12 +1,10 @@
-const { env } = require('./env');
-const { client } = require('../client');
+import { env } from './env.js';
+import { client } from '../client.js';
 
-/**
- * Log to #community-logs
- * @param {string} text
- * @returns {Promise<void>}
- */
-async function logPublic(text) {
+export async function logPublic(text: string, logConsole = true): Promise<void> {
+    if (logConsole) {
+        console.log(text);
+    }
     if (env.SLACK_LOG_CHANNEL) {
         await client.chat.postMessage({
             channel: env.SLACK_LOG_CHANNEL,
@@ -15,39 +13,23 @@ async function logPublic(text) {
     }
 }
 
-/**
- * Log to #firehouse-logs
- * @param {string} text
- * @returns {Promise<void>}
- */
-async function logInternal(text) {
+export async function logInternal(text: string, logConsole = true): Promise<void> {
+    if (logConsole) {
+        console.log(text);
+    }
     await client.chat.postMessage({
         channel: env.MIRRORCHANNEL,
         text,
     });
 }
 
-/**
- * Log to both public and internal channels
- * @param {string} text
- * @returns {Promise<void>}
- */
-async function logBoth(text) {
-    await Promise.all([logPublic(text), logInternal(text)]);
+export async function logBoth(text: string, logConsole = true): Promise<void> {
+    if (logConsole) {
+        console.log(text);
+    }
+    await Promise.all([logPublic(text, false), logInternal(text, false)]);
 }
 
-/**
- * @param {string} channel
- * @param {string} ts
- * @returns {string}
- */
-function getThreadLink(channel, ts) {
+export function getThreadLink(channel: string, ts: string): string {
     return `https://hackclub.slack.com/archives/${channel}/p${ts.toString().replace('.', '')}`;
 }
-
-module.exports = {
-    logPublic,
-    logInternal,
-    logBoth,
-    getThreadLink,
-};

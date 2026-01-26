@@ -1,8 +1,4 @@
-/**
- * @param {string} name
- * @returns {string}
- */
-function requireEnv(name) {
+function requireEnv(name: string): string {
     const value = process.env[name];
     if (!value) {
         throw new Error(`Missing required environment variable: ${name}`);
@@ -15,7 +11,7 @@ try {
 } catch (e) {
     // ignore
 }
-const env = {
+export const env = {
     SLACK_SIGNING_SECRET: requireEnv('SLACK_SIGNING_SECRET'),
     SLACK_BOT_TOKEN: requireEnv('SLACK_BOT_TOKEN'),
     SLACK_APP_TOKEN: process.env.SLACK_APP_TOKEN,
@@ -23,12 +19,9 @@ const env = {
     SLACK_BROWSER_TOKEN: process.env.SLACK_BROWSER_TOKEN,
     SLACK_COOKIE: process.env.SLACK_COOKIE,
     MIRRORCHANNEL: requireEnv('MIRRORCHANNEL'),
-    DEV_CHANNEL: process.env.DEV_CHANNEL,
-    PORT: process.env.PORT,
-    NODE_ENV: process.env.NODE_ENV,
-    API_KEY: process.env.API_KEY,
     SLACK_LOG_CHANNEL: process.env.SLACK_LOG_CHANNEL,
-    GRAPHITE_HOST: process.env.GRAPHITE_HOST, // unused
+    PORT: process.env.PORT,
+    API_KEY: process.env.API_KEY,
+    NODE_ENV: process.env.NODE_ENV,
+    DEV_CHANNEL: process.env.DEV_CHANNEL,
 };
-
-module.exports = { env };

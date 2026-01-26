@@ -1,9 +1,11 @@
-const { getPrisma, postMessage, postEphemeral, logInternal } = require('../../utils');
+import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import { getPrisma, postMessage, postEphemeral, logInternal } from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function unbanCommand(args) {
-    const { payload } = args;
-    const { user_id, text, channel_id } = payload;
+async function unbanCommand({
+    payload: { user_id, text, channel_id },
+    ack,
+}: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
+    await ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
@@ -20,4 +22,4 @@ async function unbanCommand(args) {
     await logInternal(`<@${userToBan}> was unbanned from <#${channel}>`);
 }
 
-module.exports = unbanCommand;
+export default unbanCommand;

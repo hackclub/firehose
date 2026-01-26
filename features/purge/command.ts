@@ -1,9 +1,13 @@
-const { isUserAdmin, deleteMessage, logInternal } = require('../../utils');
+import type { AllMiddlewareArgs, SlackCommandMiddlewareArgs } from '@slack/bolt';
+import { isUserAdmin, deleteMessage, logInternal } from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function purgeCommand(args) {
-    const { payload, client, respond } = args;
-    const { user_id, text, channel_id } = payload;
+async function purgeCommand({
+    payload: { user_id, text, channel_id },
+    client,
+    respond,
+    ack,
+}: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
+    await ack();
     const commands = text.split(' ');
     const isAdmin = await isUserAdmin(user_id);
     if (!isAdmin) return;
@@ -35,7 +39,7 @@ async function purgeCommand(args) {
         }`,
         channel: channel_id,
     });
-    
+
     const currentMessages = await client.conversations.history({
         channel: channel_id,
         limit: amount + 1,
@@ -80,4 +84,4 @@ async function purgeCommand(args) {
     ]);
 }
 
-module.exports = purgeCommand;
+export default purgeCommand;

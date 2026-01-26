@@ -1,37 +1,34 @@
-const { getPrisma, postMessage, getThreadLink, logInternal } = require('../../utils');
+import type { SlackViewMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import { getPrisma, postMessage, getThreadLink, logInternal } from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackViewMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function slowmodeModal(args) {
-    const { ack, body } = args;
+async function slowmodeModal({
+    ack,
+    body,
+}: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
     const prisma = getPrisma();
 
     try {
         const view = body.view;
         const metadata = JSON.parse(view.private_metadata);
         const { channel_id, admin_id, command_channel } = metadata;
-        const submittedValues = /** @type {Record<string, Record<string, any>>} */ (
-            view.state.values
-        );
+        const submittedValues = view.state.values as Record<string, Record<string, any>>;
         const slowmodeTime = parseInt(
             submittedValues.slowmode_time_block.slowmode_time_input.value || '0'
         );
         const slowmodeDuration =
             submittedValues.slowmode_duration_block.slowmode_duration_input.selected_date_time;
         const reason = submittedValues.slowmode_reason_block.slowmode_reason_input.value || '';
-        /** @type {string[]} */
-        const whitelistedUsers =
+        const whitelistedUsers: string[] =
             submittedValues.slowmode_whitelist_block.slowmode_whitelist_input.selected_users || [];
-        /** @type {{ value: string }[]} */
-        const applyToThreadsOptions =
+        const applyToThreadsOptions: { value: string }[] =
             submittedValues.slowmode_apply_to_threads_block?.slowmode_apply_to_threads_input
                 ?.selected_options || [];
         const applyToThreads = applyToThreadsOptions.some(
             (opt) => opt.value === 'apply_to_threads'
         );
-        /** @type {Record<string, string>} */
-        const errors = {};
+        const errors: Record<string, string> = {};
 
-        let expiresAt = null;
+        let expiresAt: Date | null = null;
         if (slowmodeDuration) {
             expiresAt = new Date(slowmodeDuration * 1000);
             if (expiresAt <= new Date()) {
@@ -132,31 +129,28 @@ async function slowmodeModal(args) {
     }
 }
 
-/** @param {import('@slack/bolt').SlackViewMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function slowmodeThreadModal(args) {
-    const { ack, body } = args;
+async function slowmodeThreadModal({
+    ack,
+    body,
+}: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
     const prisma = getPrisma();
 
     try {
         const view = body.view;
         const metadata = JSON.parse(view.private_metadata);
         const { channel_id, admin_id, command_channel, thread_ts } = metadata;
-        const submittedValues = /** @type {Record<string, Record<string, any>>} */ (
-            view.state.values
-        );
+        const submittedValues = view.state.values as Record<string, Record<string, any>>;
         const slowmodeTime = parseInt(
             submittedValues.slowmode_time_block.slowmode_time_input.value || '0'
         );
         const slowmodeDuration =
             submittedValues.slowmode_duration_block.slowmode_duration_input.selected_date_time;
         const reason = submittedValues.slowmode_reason_block.slowmode_reason_input.value || '';
-        /** @type {string[]} */
-        const whitelistedUsers =
+        const whitelistedUsers: string[] =
             submittedValues.slowmode_whitelist_block.slowmode_whitelist_input.selected_users || [];
-        /** @type {Record<string, string>} */
-        const errors = {};
+        const errors: Record<string, string> = {};
 
-        let expiresAt = null;
+        let expiresAt: Date | null = null;
         if (slowmodeDuration) {
             expiresAt = new Date(slowmodeDuration * 1000);
             if (expiresAt <= new Date()) {
@@ -255,7 +249,4 @@ async function slowmodeThreadModal(args) {
     }
 }
 
-module.exports = {
-    slowmodeModal,
-    slowmodeThreadModal,
-};
+export { slowmodeModal, slowmodeThreadModal };

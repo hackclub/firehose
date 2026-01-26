@@ -1,8 +1,10 @@
-const { getPrisma, isUserAdmin, deleteMessage, postEphemeral } = require('../../utils');
+import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import { getPrisma, isUserAdmin, deleteMessage, postEphemeral } from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs} args */
-async function cleanupChannel(args) {
-    const { client, payload } = args;
+async function cleanupChannel({
+    client,
+    payload,
+}: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs) {
     if (!payload || !payload.type || payload.type !== 'message' || !('user' in payload)) return;
     const { user, ts, text, channel, subtype } = payload;
     const thread_ts = 'thread_ts' in payload ? payload.thread_ts : null;
@@ -96,4 +98,4 @@ async function cleanupChannel(args) {
     }
 }
 
-module.exports = cleanupChannel;
+export default cleanupChannel;

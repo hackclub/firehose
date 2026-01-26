@@ -1,14 +1,15 @@
-const {
+import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import {
     getPrisma,
     isUserExempt,
     deleteMessage,
     postEphemeral,
     logInternal,
-} = require('../../utils');
+} from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs} args */
-async function enforceSlowMode(args) {
-    const { payload } = args;
+async function enforceSlowMode({
+    payload,
+}: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs) {
     if (!payload || payload.type !== 'message' || !('user' in payload)) {
         return;
     }
@@ -133,4 +134,4 @@ async function enforceSlowMode(args) {
     }
 }
 
-module.exports = enforceSlowMode;
+export default enforceSlowMode;

@@ -1,4 +1,4 @@
-const { getPrisma, removeReaction, logBoth, getThreadLink } = require('../../utils');
+import { getPrisma, removeReaction, logBoth, getThreadLink } from '../../utils/index.js';
 
 const prisma = getPrisma();
 
@@ -54,4 +54,4 @@ Link: ${getThreadLink(thread.channel, thread.id)}`
     autoUnlock();
 }
 
-module.exports = startAutoUnlock;
+export default startAutoUnlock;

@@ -1,4 +1,5 @@
-const {
+import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import {
     getPrisma,
     isUserAdmin,
     deleteMessage,
@@ -6,14 +7,14 @@ const {
     removeReaction,
     logBoth,
     getThreadLink,
-} = require('../../utils');
-const { client } = require('../../client');
+} from '../../utils/index.js';
+import { client } from '../../client.js';
 
 const prisma = getPrisma();
 
-/** @param {import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs} args */
-async function messageListener(args) {
-    const { payload: message } = args;
+async function messageListener({
+    payload: message,
+}: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs) {
     if (!message || !('user' in message) || !message.user) return;
 
     const thread_ts = 'thread_ts' in message ? message.thread_ts : undefined;
@@ -72,4 +73,4 @@ Link: ${getThreadLink(thread.channel, thread.id)}`
     }
 }
 
-module.exports = { messageListener };
+export { messageListener };

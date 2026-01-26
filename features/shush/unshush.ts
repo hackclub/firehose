@@ -1,9 +1,11 @@
-const { getPrisma, isUserAdmin, postMessage, logInternal } = require('../../utils');
+import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import { getPrisma, isUserAdmin, postMessage, logInternal } from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function unshushCommand(args) {
-    const { payload } = args;
-    const { user_id, text, channel_id } = payload;
+async function unshushCommand({
+    payload: { user_id, text },
+    ack,
+}: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
+    await ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
     const isAdmin = await isUserAdmin(user_id);
@@ -25,4 +27,4 @@ async function unshushCommand(args) {
     await postMessage(userToBan, `You were unshushed`);
 }
 
-module.exports = unshushCommand;
+export default unshushCommand;

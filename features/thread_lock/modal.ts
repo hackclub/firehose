@@ -1,14 +1,11 @@
-const { getPrisma, postMessage, addReaction, logBoth, getThreadLink } = require('../../utils');
+import type { App } from '@slack/bolt';
+import { getPrisma, postMessage, addReaction, logBoth, getThreadLink } from '../../utils/index.js';
 
-/**
- * @param {import('@slack/bolt').App} app
- */
-function registerModal(app) {
+function registerModal(app: App) {
     const prisma = getPrisma();
 
     app.view('lock_modal', async ({ view, ack, body, respond }) => {
-        /** @type {{ thread_id: string, channel_id: string }} */
-        let json;
+        let json: { thread_id: string; channel_id: string };
         try {
             json = JSON.parse(view.private_metadata);
         } catch (e) {
@@ -19,10 +16,8 @@ function registerModal(app) {
         const channel_id = json.channel_id;
 
         const submittedValues = view.state.values;
-        /** @type {string | undefined} */
-        let reason;
-        /** @type {Date | undefined} */
-        let expires;
+        let reason: string | undefined;
+        let expires: Date | undefined;
 
         for (let key in submittedValues) {
             if (submittedValues[key]['plain_text_input-action'])
@@ -128,4 +123,4 @@ Link: ${getThreadLink(channel_id, thread_id)}`
     });
 }
 
-module.exports = registerModal;
+export default registerModal;

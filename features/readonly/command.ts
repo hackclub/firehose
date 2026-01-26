@@ -1,22 +1,24 @@
-const {
+import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import {
     getPrisma,
     getChannelManagers,
     isUserAdmin,
     postEphemeral,
     logInternal,
-} = require('../../utils');
+} from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function readOnlyCommand(args) {
-    const { payload } = args;
-    const { text, channel_id, user_id } = payload;
+async function readOnlyCommand({
+    payload: { text, channel_id, user_id },
+    ack,
+}: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
+    await ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
     const channel = commands[0].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
     const isAdmin = await isUserAdmin(user_id);
     const channelManagers = await getChannelManagers(channel_id);
 
-    const errors = [];
+    const errors: string[] = [];
     if (!isAdmin && !channelManagers.includes(user_id))
         errors.push('Only admins can run this command.');
     if (!channel) errors.push('You need to give a channel to make it read only');
@@ -55,4 +57,4 @@ async function readOnlyCommand(args) {
     }
 }
 
-module.exports = readOnlyCommand;
+export default readOnlyCommand;

@@ -1,9 +1,17 @@
-const { getPrisma, isUserAdmin, postMessage, postEphemeral, logInternal } = require('../../utils');
+import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import {
+    getPrisma,
+    isUserAdmin,
+    postMessage,
+    postEphemeral,
+    logInternal,
+} from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function shushCommand(args) {
-    const { payload } = args;
-    const { user_id, text, channel_id } = payload;
+async function shushCommand({
+    payload: { user_id, text, channel_id },
+    ack,
+}: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
+    await ack();
     const prisma = getPrisma();
 
     const isAdmin = await isUserAdmin(user_id);
@@ -11,7 +19,7 @@ async function shushCommand(args) {
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
     const reason = commands.slice(1).join(' ');
 
-    const errors = [];
+    const errors: string[] = [];
     if (!isAdmin) errors.push('Non-admins can only shush themselves.');
     if (!reason) errors.push('A reason is required.');
     if (!userToBan) errors.push('A user is required');
@@ -59,4 +67,4 @@ async function shushCommand(args) {
     }
 }
 
-module.exports = shushCommand;
+export default shushCommand;

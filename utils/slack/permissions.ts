@@ -1,19 +1,13 @@
-const { env } = require('../env');
-const { client } = require('../../client');
+import { env } from '../env.js';
+import { client } from '../../client.js';
 
-/** @type {Map<string, {managers: string[], expiresAt: number}>} */
-const channelManagersCache = new Map();
+const channelManagersCache = new Map<string, { managers: string[]; expiresAt: number }>();
 const CHANNEL_CACHE_TTL_MS = 60 * 1000;
 
-/** @type {Map<string, {isAdmin: boolean, expiresAt: number}>} */
-const userInfoCache = new Map();
+const userInfoCache = new Map<string, { isAdmin: boolean; expiresAt: number }>();
 const USER_CACHE_TTL_MS = 60 * 1000;
 
-/**
- * @param {string} channel
- * @returns {Promise<string[]>}
- */
-async function getChannelManagers(channel) {
+export async function getChannelManagers(channel: string): Promise<string[]> {
     const cached = channelManagersCache.get(channel);
     if (cached && cached.expiresAt > Date.now()) {
         return cached.managers;
@@ -30,8 +24,7 @@ async function getChannelManagers(channel) {
     formdata.append('token', env.SLACK_BROWSER_TOKEN);
     formdata.append('entity_id', channel);
 
-    /** @type {RequestInit} */
-    const requestOptions = {
+    const requestOptions: RequestInit = {
         method: 'POST',
         headers: myHeaders,
         body: formdata,
@@ -59,11 +52,7 @@ async function getChannelManagers(channel) {
     return managers;
 }
 
-/**
- * @param {string} userId
- * @returns {Promise<boolean>}
- */
-async function isUserAdmin(userId) {
+export async function isUserAdmin(userId: string): Promise<boolean> {
     const cached = userInfoCache.get(userId);
     if (cached && cached.expiresAt > Date.now()) {
         return cached.isAdmin;
@@ -74,13 +63,11 @@ async function isUserAdmin(userId) {
     return isAdmin;
 }
 
-/**
- * @param {string} userId
- * @param {string} channel
- * @param {string[]} [whitelistedUsers]
- * @returns {Promise<boolean>}
- */
-async function isUserExempt(userId, channel, whitelistedUsers = []) {
+export async function isUserExempt(
+    userId: string,
+    channel: string,
+    whitelistedUsers: string[] = []
+): Promise<boolean> {
     const isAdmin = await isUserAdmin(userId);
     if (isAdmin) return true;
     const managers = await getChannelManagers(channel);
@@ -88,9 +75,3 @@ async function isUserExempt(userId, channel, whitelistedUsers = []) {
     if (whitelistedUsers.includes(userId)) return true;
     return false;
 }
-
-module.exports = {
-    getChannelManagers,
-    isUserAdmin,
-    isUserExempt,
-};

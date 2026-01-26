@@ -1,10 +1,9 @@
 node_modules
-# Keep environment variables out of version control
+dist
 .env
 
 # Package logs
 pnpm-lock.yaml
-prisma/migrations/20241008185016_migrate_dev/migration.sql
 
 .DS_Store
 tmp*

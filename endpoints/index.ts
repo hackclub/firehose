@@ -1,9 +1,9 @@
-const { ExpressReceiver } = require('@slack/bolt');
-const express = require('express');
-const { env } = require('../utils');
+import { ExpressReceiver } from '@slack/bolt';
+import express from 'express';
+import { env } from '../utils/index.js';
 
-const rootEndpoint = require('./root');
-const pingEndpoint = require('./ping');
+import rootEndpoint from './root.js';
+import pingEndpoint from './ping.js';
 
 const isDevMode = env.NODE_ENV === 'development';
 
@@ -29,7 +29,4 @@ function startExpressServer() {
     return app;
 }
 
-module.exports = {
-    receiver,
-    startExpressServer,
-};
+export { receiver, startExpressServer };

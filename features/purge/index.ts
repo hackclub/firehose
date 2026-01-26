@@ -1,10 +1,8 @@
-const command = require('./command');
+import type { App } from '@slack/bolt';
+import purgeCommand from './command.js';
 
-/** @param {import('@slack/bolt').App} app */
-function register(app) {
-    app.command(/\/.*purge$/, command);
+function register(app: App) {
+    app.command(/\/(.*dev-)?purge$/, purgeCommand);
 }
 
-module.exports = {
-    register,
-};
+export { register };

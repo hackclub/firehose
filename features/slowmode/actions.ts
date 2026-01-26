@@ -1,16 +1,23 @@
-const {
+import type {
+    SlackActionMiddlewareArgs,
+    BlockAction,
+    AllMiddlewareArgs,
+    ButtonAction,
+} from '@slack/bolt';
+import {
     getPrisma,
     isUserAdmin,
     postMessage,
     postEphemeral,
     getThreadLink,
     logInternal,
-} = require('../../utils');
+} from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackActionMiddlewareArgs<import('@slack/bolt').BlockAction> & import('@slack/bolt').AllMiddlewareArgs} args */
-async function slowmodeDisableButton(args) {
-    const { ack, body } = args;
-    const actions = /** @type {import('@slack/bolt').ButtonAction[]} */ (body.actions);
+async function slowmodeDisableButton({
+    ack,
+    body,
+}: SlackActionMiddlewareArgs<BlockAction> & AllMiddlewareArgs) {
+    const actions = body.actions as ButtonAction[];
     const prisma = getPrisma();
 
     try {
@@ -60,17 +67,17 @@ async function slowmodeDisableButton(args) {
     }
 }
 
-/** @param {import('@slack/bolt').SlackActionMiddlewareArgs<import('@slack/bolt').BlockAction> & import('@slack/bolt').AllMiddlewareArgs} args */
-async function slowmodeThreadDisableButton(args) {
-    const { ack, body } = args;
-    const actions = /** @type {import('@slack/bolt').ButtonAction[]} */ (body.actions);
+async function slowmodeThreadDisableButton({
+    ack,
+    body,
+}: SlackActionMiddlewareArgs<BlockAction> & AllMiddlewareArgs) {
+    const actions = body.actions as ButtonAction[];
     const prisma = getPrisma();
 
     try {
         await ack();
 
-        /** @type {{ channel: string, threadTs: string }} */
-        const data = JSON.parse(actions[0].value || '{}');
+        const data: { channel: string; threadTs: string } = JSON.parse(actions[0].value || '{}');
         const { channel, threadTs } = data;
         const isAdmin = await isUserAdmin(body.user.id);
         if (!isAdmin) {
@@ -121,7 +128,4 @@ async function slowmodeThreadDisableButton(args) {
     }
 }
 
-module.exports = {
-    slowmodeDisableButton,
-    slowmodeThreadDisableButton,
-};
+export { slowmodeDisableButton, slowmodeThreadDisableButton };

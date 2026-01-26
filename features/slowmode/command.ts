@@ -1,9 +1,13 @@
-const { getPrisma, isUserAdmin, postEphemeral } = require('../../utils');
+import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import type { View } from '@slack/types';
+import { getPrisma, isUserAdmin, postEphemeral } from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function slowmodeCommand(args) {
-    const { payload, client } = args;
-    const { user_id, text, channel_id } = payload;
+async function slowmodeCommand({
+    payload: { user_id, text, channel_id, trigger_id },
+    client,
+    ack,
+}: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
+    await ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
     const isAdmin = await isUserAdmin(user_id);
@@ -13,7 +17,7 @@ async function slowmodeCommand(args) {
         channel = commands[0].split('|')[0].replace('<#', '').replace('>', '');
     }
 
-    const errors = [];
+    const errors: string[] = [];
     if (!isAdmin) errors.push('Only admins can run this command.');
     if (!channel) errors.push('You need to give a channel to make it read only');
 
@@ -31,8 +35,7 @@ async function slowmodeCommand(args) {
     const defaultWhitelist = existingSlowmode?.whitelistedUsers || [];
     const defaultApplyToThreads = existingSlowmode?.applyToThreads || false;
 
-    /** @type {import('@slack/types').View} */
-    const slowmodeModal = /** @type {any} */ ({
+    const slowmodeModal: View = {
         type: 'modal',
         callback_id: 'slowmode_modal',
         private_metadata: JSON.stringify({
@@ -201,12 +204,12 @@ async function slowmodeCommand(args) {
                 ],
             },
         ],
-    });
+    } as View;
 
     await client.views.open({
-        trigger_id: payload.trigger_id,
+        trigger_id: trigger_id,
         view: slowmodeModal,
     });
 }
 
-module.exports = slowmodeCommand;
+export default slowmodeCommand;

@@ -1,21 +1,17 @@
-const registerShortcuts = require('./shortcut');
-const registerModal = require('./modal');
-const { messageListener } = require('./listener');
-const startAutoUnlock = require('./tasks');
-const registerRoutes = require('./api');
+import type { App } from '@slack/bolt';
+import type { Router } from 'express';
 
-/**
- * @param {import('@slack/bolt').App} app
- * @param {import('express').Router} router
- */
-function register(app, router) {
+import registerShortcuts from './shortcut.js';
+import registerModal from './modal.js';
+import { messageListener } from './listener.js';
+import startAutoUnlock from './tasks.js';
+import registerRoutes from './api.js';
+
+function register(app: App, router: Router) {
     registerShortcuts(app);
     registerModal(app);
     startAutoUnlock();
     registerRoutes(router);
 }
 
-module.exports = {
-    register,
-    messageListener,
-};
+export { register, messageListener };

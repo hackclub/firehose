@@ -1,9 +1,17 @@
-const { getPrisma, isUserAdmin, postMessage, postEphemeral, logInternal } = require('../../utils');
+import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import {
+    getPrisma,
+    isUserAdmin,
+    postMessage,
+    postEphemeral,
+    logInternal,
+} from '../../utils/index.js';
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function channelBanCommand(args) {
-    const { payload } = args;
-    const { user_id, text, channel_id } = payload;
+async function channelBanCommand({
+    payload: { user_id, text, channel_id },
+    ack,
+}: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
+    await ack();
     const prisma = getPrisma();
 
     const isAdmin = await isUserAdmin(user_id);
@@ -13,7 +21,7 @@ async function channelBanCommand(args) {
     const channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
     console.log(text, commands, userToBan, channel, reason);
 
-    const errors = [];
+    const errors: string[] = [];
     if (!isAdmin) errors.push('Only admins can run this command.');
     if (!reason) errors.push('A reason is required.');
     if (!userToBan) errors.push('A user is required');
@@ -49,4 +57,4 @@ async function channelBanCommand(args) {
     }
 }
 
-module.exports = channelBanCommand;
+export default channelBanCommand;

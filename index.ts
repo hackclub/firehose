@@ -1,7 +1,7 @@
-const { App } = require('@slack/bolt');
-const { receiver, startExpressServer } = require('./endpoints');
-const { features } = require('./features');
-const { env, logInternal } = require('./utils');
+import { App, SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
+import { receiver, startExpressServer } from './endpoints/index.js';
+import { features } from './features/index.js';
+import { env, logInternal } from './utils/index.js';
 
 const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
@@ -28,7 +28,7 @@ app.event('channel_created', async ({ event, client }) => {
         const channelId = event.channel.id;
         await client.conversations.join({ channel: channelId });
     } catch (e) {
-        app.logger.error(e);
+        console.error(e);
     }
 });
 
@@ -41,18 +41,18 @@ app.event('channel_left', async ({ event, client }) => {
         if (channelInfo.channel?.is_archived) return;
 
         const user = event.actor_id;
-        console.log(`User <@${user}> removed Firehose from <#${channelID}>, rejoining!`);
-        logInternal(`User <@${user}> removed Firehose from <#${channelID}>, rejoining!`);
         await client.conversations.join({ channel: channelID });
+        await logInternal(`User <@${user}> removed Firehose from <#${channelID}>, rejoining!`);
     } catch (e) {
-        console.log(e);
+        console.error(e);
     }
 });
 
-/** @type {((args: import('@slack/bolt').SlackEventMiddlewareArgs<'message'> & import('@slack/bolt').AllMiddlewareArgs) => Promise<void>)[]} */
-const messageListeners = features
+const messageListeners: ((
+    args: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs
+) => Promise<void>)[] = features
     .map((f) => ('messageListener' in f ? f.messageListener : undefined))
-    .filter((listener) => listener !== undefined);
+    .filter((listener): listener is NonNullable<typeof listener> => listener !== undefined);
 
 app.event('message', async (args) => {
     const { body } = args;

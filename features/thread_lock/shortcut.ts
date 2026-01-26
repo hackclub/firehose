@@ -1,4 +1,6 @@
-const {
+import type { App } from '@slack/bolt';
+import type { ModalView } from '@slack/types';
+import {
     getPrisma,
     isUserAdmin,
     postEphemeral,
@@ -6,12 +8,10 @@ const {
     removeReaction,
     logBoth,
     getThreadLink,
-} = require('../../utils');
+} from '../../utils/index.js';
+import modalJson from './modal.json' with { type: 'json' };
 
-/**
- * @param {import('@slack/bolt').App} app
- */
-function registerShortcuts(app) {
+function registerShortcuts(app: App) {
     const prisma = getPrisma();
 
     app.shortcut('lock_thread', async ({ ack, body, client }) => {
@@ -50,14 +50,14 @@ function registerShortcuts(app) {
         if (!thread || !thread.active) {
             await client.views.open({
                 trigger_id: trigger_id,
-                view: /** @type {import('@slack/types').ModalView} */ ({
-                    ...require('./modal.json'),
+                view: {
+                    ...modalJson,
                     callback_id: 'lock_modal',
                     private_metadata: JSON.stringify({
                         thread_id: thread_ts,
                         channel_id: channel.id,
                     }),
-                }),
+                } as ModalView,
             });
             return;
         } else {
@@ -161,4 +161,4 @@ Link: ${getThreadLink(channel.id, thread_ts)}`
     });
 }
 
-module.exports = registerShortcuts;
+export default registerShortcuts;

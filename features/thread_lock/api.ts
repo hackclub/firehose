@@ -1,9 +1,7 @@
-const { getPrisma, env } = require('../../utils');
+import type { Router } from 'express';
+import { getPrisma, env } from '../../utils/index.js';
 
-/**
- * @param {import('express').Router} router
- */
-function registerRoutes(router) {
+function registerRoutes(router: Router) {
     const prisma = getPrisma();
 
     router.get('/lock', async (req, res) => {
@@ -22,7 +20,7 @@ function registerRoutes(router) {
         if (!env.API_KEY || key !== env.API_KEY) {
             return res.status(401).json({ ok: false, error: 'Please provide a valid API key' });
         }
-        const time = timeRaw ? new Date(/** @type {string} */ (timeRaw)) : null;
+        const time = timeRaw ? new Date(timeRaw as string) : null;
         const reasonVal = reason ?? '(none)';
         if (!id || !user || !timeRaw || !time || isNaN(time.getTime()) || !channel) {
             return res.status(400).json({ ok: false, error: 'Give all of the fields' });
@@ -30,7 +28,7 @@ function registerRoutes(router) {
 
         const thread = await prisma.thread.findFirst({
             where: {
-                id: /** @type {string} */ (id),
+                id: id as string,
             },
         });
 
@@ -39,23 +37,23 @@ function registerRoutes(router) {
         if (!thread) {
             await prisma.thread.create({
                 data: {
-                    id: /** @type {string} */ (id),
-                    admin: /** @type {string} */ (user),
+                    id: id as string,
+                    admin: user as string,
                     lock_type: 'test',
                     time: time,
-                    reason: /** @type {string} */ (reason),
-                    channel: /** @type {string} */ (channel),
+                    reason: reason as string,
+                    channel: channel as string,
                     active: true,
                 },
             });
             await prisma.log.create({
                 data: {
-                    thread_id: /** @type {string} */ (id),
-                    admin: /** @type {string} */ (user),
+                    thread_id: id as string,
+                    admin: user as string,
                     lock_type: 'lock',
                     time: time,
-                    reason: /** @type {string} */ (reasonVal),
-                    channel: /** @type {string} */ (channel),
+                    reason: reasonVal as string,
+                    channel: channel as string,
                     active: true,
                 },
             });
@@ -63,22 +61,22 @@ function registerRoutes(router) {
         } else if (thread.active) {
             await prisma.thread.update({
                 where: {
-                    id: /** @type {string} */ (id),
+                    id: id as string,
                 },
                 data: {
-                    id: /** @type {string} */ (id),
-                    admin: /** @type {string} */ (user),
+                    id: id as string,
+                    admin: user as string,
                     active: false,
                 },
             });
             await prisma.log.create({
                 data: {
-                    thread_id: /** @type {string} */ (id),
-                    admin: /** @type {string} */ (user),
+                    thread_id: id as string,
+                    admin: user as string,
                     lock_type: 'unlock',
                     time: time,
-                    reason: /** @type {string} */ (reasonVal),
-                    channel: /** @type {string} */ (channel),
+                    reason: reasonVal as string,
+                    channel: channel as string,
                     active: false,
                 },
             });
@@ -86,23 +84,23 @@ function registerRoutes(router) {
         } else {
             await prisma.thread.update({
                 where: {
-                    id: /** @type {string} */ (id),
+                    id: id as string,
                 },
                 data: {
-                    id: /** @type {string} */ (id),
-                    admin: /** @type {string} */ (user),
+                    id: id as string,
+                    admin: user as string,
                     time: time,
                     active: true,
                 },
             });
             await prisma.log.create({
                 data: {
-                    thread_id: /** @type {string} */ (id),
-                    admin: /** @type {string} */ (user),
+                    thread_id: id as string,
+                    admin: user as string,
                     lock_type: 'lock',
                     time: time,
-                    reason: /** @type {string} */ (reasonVal),
-                    channel: /** @type {string} */ (channel),
+                    reason: reasonVal as string,
+                    channel: channel as string,
                     active: true,
                 },
             });
@@ -112,4 +110,4 @@ function registerRoutes(router) {
     });
 }
 
-module.exports = registerRoutes;
+export default registerRoutes;
