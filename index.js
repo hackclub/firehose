@@ -89,7 +89,7 @@ app.event('message', async (args) => {
     if (!event || !event.type || event.type !== 'message' || !('user' in event)) return;
     const { type, subtype, user, channel, ts, text } = event;
 
-    console.log('New message event received:', { type, subtype, user, channel, ts, text });
+    // console.log('New message event received:', { type, subtype, user, channel, ts, text });
 
     if (isDevMode && channel !== devChannel) return;
 

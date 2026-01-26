@@ -11,7 +11,8 @@ module.exports = async function getChannelManagers(channel) {
         return cached.managers;
     }
     if (!env.SLACK_BROWSER_TOKEN || !env.SLACK_COOKIE) {
-        throw new Error('Missing SLACK_BROWSER_TOKEN or SLACK_COOKIE in environment variables');
+        console.error('Missing SLACK_BROWSER_TOKEN or SLACK_COOKIE in environment variables');
+        return [];
     }
 
     const myHeaders = new Headers();
