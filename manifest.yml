@@ -104,8 +104,8 @@ settings:
             - message.groups
     interactivity:
         is_enabled: true
-        request_url: https://channel-mod-tools-hackclub-37801e4e9945.herokuapp.com/slack/events
-        message_menu_options_url: https://channel-mod-tools-hackclub-37801e4e9945.herokuapp.com/slack/events
+        request_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+        message_menu_options_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
     org_deploy_enabled: false
     socket_mode_enabled: false
     token_rotation_enabled: false
