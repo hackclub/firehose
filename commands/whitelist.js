@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { getPrisma } = require('../utils/prismaConnector');
 const { env } = require('../utils/env');
-const getChannelManagers = require('../utils/isChannelManger');
+const getChannelManagers = require('../utils/isChannelManager');
 
 /** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
 async function whitelist(args) {

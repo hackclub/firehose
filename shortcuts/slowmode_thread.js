@@ -1,38 +1,40 @@
 const { getPrisma } = require('../utils/prismaConnector');
-const getChannelManagers = require('../utils/isChannelManager');
 
-/** @param {import('@slack/bolt').SlackCommandMiddlewareArgs & import('@slack/bolt').AllMiddlewareArgs} args */
-async function slowmode(args) {
-    const { payload, client } = args;
-    const { user_id, text, channel_id } = payload;
+/** @param {import('@slack/bolt').SlackShortcutMiddlewareArgs<import('@slack/bolt').SlackShortcut> & import('@slack/bolt').AllMiddlewareArgs} args */
+async function slowmode_thread(args) {
+    const { ack, body, client } = args;
+    if (!body || body.type !== 'message_action') {
+        return;
+    }
+    const { user, channel, message, trigger_id } = body;
+
+    await ack();
+
     const prisma = getPrisma();
-    const commands = text.split(' ');
-    const userInfo = await client.users.info({ user: user_id });
+    const threadTs = message.thread_ts || message.ts;
+    const userInfo = await client.users.info({ user: user.id });
     const isAdmin = userInfo.user?.is_admin;
-    const channelManagers = await getChannelManagers(channel_id);
 
-    let channel = channel_id;
-    if (commands[0] && commands[0].includes('#')) {
-        channel = commands[0].split('|')[0].replace('<#', '').replace('>', '');
+    if (!isAdmin) {
+        await client.chat.postEphemeral({
+            channel: `${channel.id}`,
+            thread_ts: threadTs,
+            user: user.id,
+            text: 'Only admins can run this command.',
+        });
+        return;
     }
 
-    const errors = [];
-    // editor's note: i don't think it would be appropriate allowing channel managers to enable slowmode (for now...) - up to discussion.
-    if (!isAdmin) errors.push('Only admins can run this command.');
-    if (!channel) errors.push('You need to give a channel to make it read only');
-
-    if (errors.length > 0)
-        return await client.chat.postEphemeral({
-            channel: `${channel_id}`,
-            user: `${user_id}`,
-            text: errors.join('\n'),
-        });
+    if (!threadTs) {
+        return;
+    }
 
     const existingSlowmode = await prisma.slowmode.findFirst({
-        where: { channel: channel },
+        where: {
+            channel: channel.id,
+            threadTs: threadTs,
+        },
     });
-
-    // TODO: Slowmode for specific threads similar to threadlocker
 
     const isUpdate = existingSlowmode && existingSlowmode.locked;
     const defaultTime = (existingSlowmode?.time || 5).toString();
@@ -41,15 +43,15 @@ async function slowmode(args) {
         : undefined;
     const defaultWhitelist = existingSlowmode?.whitelistedUsers || [];
 
-    // using a modal-based approach similar to definite threadlocker
     /** @type {import('@slack/types').View} */
     const slowmodeModal = /** @type {any} */ ({
         type: 'modal',
-        callback_id: 'slowmode_modal',
+        callback_id: 'slowmode_thread_modal',
         private_metadata: JSON.stringify({
-            channel_id: channel,
-            admin_id: user_id,
-            command_channel: channel_id,
+            channel_id: channel.id,
+            admin_id: user.id,
+            command_channel: channel.id,
+            thread_ts: threadTs,
         }),
         title: {
             type: 'plain_text',
@@ -68,7 +70,7 @@ async function slowmode(args) {
                 type: 'section',
                 text: {
                     type: 'mrkdwn',
-                    text: `Configure slowmode for <#${channel}>`,
+                    text: `Configure slowmode for this thread`,
                 },
             },
             {
@@ -169,8 +171,8 @@ async function slowmode(args) {
                             text: 'Turn off Slowmode',
                         },
                         style: 'danger',
-                        action_id: 'slowmode_disable_button',
-                        value: JSON.stringify({ channel: channel, threadTs: '' }),
+                        action_id: 'slowmode_thread_disable_button',
+                        value: JSON.stringify({ channel: channel.id, threadTs: threadTs }),
                     },
                 ],
             },
@@ -178,9 +180,9 @@ async function slowmode(args) {
     });
 
     await client.views.open({
-        trigger_id: payload.trigger_id,
+        trigger_id: trigger_id,
         view: slowmodeModal,
     });
 }
 
-module.exports = slowmode;
+module.exports = slowmode_thread;

@@ -7,7 +7,7 @@ It lets us:
 - Mute people from the Slack
 - Mute people from Channels only
 - Make Channels read only & Whitelist people
-- Start slow mode (WIP)
+- Start slow mode in a channel
 
 ## Filesystem
 - ```interactions``` is where the code for deleting messages, slow mode (WIP), muting people, and making channels read only; It also joins every new channel
