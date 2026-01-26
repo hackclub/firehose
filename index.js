@@ -70,11 +70,14 @@ app.event('channel_left', async ({ event, client }) => {
 
     try {
         const channelID = event.channel;
+        const channelInfo = await client.conversations.info({ channel: channelID });
+        if (channelInfo.channel?.is_archived) return;
+
         const user = event.actor_id;
         console.log(`User <@${user}> removed Firehose from <#${channelID}>, rejoining!`);
         app.client.chat.postMessage({
             channel: env.MIRRORCHANNEL,
-            text: `User </@${user}> removed Firehose from <#${channelID}>, rejoining!`,
+            text: `User <@${user}> removed Firehose from <#${channelID}>, rejoining!`,
         });
         await client.conversations.join({ channel: channelID });
     } catch (e) {
