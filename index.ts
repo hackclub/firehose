@@ -1,8 +1,9 @@
 const { App } = require('@slack/bolt');
-const { receiver, startExpressServer, isDevMode } = require('./endpoints');
+const { receiver, startExpressServer } = require('./endpoints');
 const { features } = require('./features');
 const { env, logInternal } = require('./utils');
 
+const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
 
 const app = new App({

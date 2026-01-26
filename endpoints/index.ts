@@ -32,5 +32,4 @@ function startExpressServer() {
 module.exports = {
     receiver,
     startExpressServer,
-    isDevMode,
 };
