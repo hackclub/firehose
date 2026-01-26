@@ -16,12 +16,13 @@ async function slowmode_thread(args) {
     const isAdmin = userInfo.user?.is_admin;
 
     if (!isAdmin) {
-        return await client.chat.postEphemeral({
+        await client.chat.postEphemeral({
             channel: `${channel.id}`,
             thread_ts: threadTs,
             user: user.id,
             text: 'Only admins can run this command.',
         });
+        return;
     }
 
     if (!threadTs) {

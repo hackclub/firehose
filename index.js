@@ -21,10 +21,11 @@ const shushCommand = require('./commands/shush.js');
 const unshushCommand = require('./commands/unshush.js');
 const purgeCommand = require('./commands/purge.js');
 
-const handleEvent = require('./events/index.js');
-const handleAction = require('./actions/index.js');
-const handleViews = require('./views/index.js');
 const slowmodeThreadShortcut = require('./shortcuts/slowmode_thread');
+const slowmodeDisableButton = require('./actions/slowmode_disable_button');
+const slowmodeThreadDisableButton = require('./actions/slowmode_thread_disable_button');
+const slowmodeModal = require('./views/slowmode_modal');
+const slowmodeThreadModal = require('./views/slowmode_thread_modal');
 
 const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
@@ -98,13 +99,11 @@ app.event('message', async (args) => {
     await listenforChannelBannedUser(args);
 });
 
-app.event(/.*/, handleEvent); // Catch all events dynamically
-app.action(/.*/, handleAction); // Catch all actions dynamically
-app.view(/.*/, handleViews); // Catch all view submissions dynamically
-
-app.shortcut('slowmode_thread', async (args) => {
-    await slowmodeThreadShortcut(args);
-});
+app.shortcut('slowmode_thread', slowmodeThreadShortcut);
+app.action('slowmode_disable_button', slowmodeDisableButton);
+app.action('slowmode_thread_disable_button', slowmodeThreadDisableButton);
+app.view('slowmode_modal', slowmodeModal);
+app.view('slowmode_thread_modal', slowmodeThreadModal);
 
 app.command(/.*?/, async (args) => {
     const { ack, command, respond } = args;

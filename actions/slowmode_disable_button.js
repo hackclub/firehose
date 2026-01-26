@@ -15,11 +15,12 @@ async function slowmode_disable_button(args) {
         const admin_id = body.user.id;
         const userInfo = await client.users.info({ user: admin_id });
         if (!userInfo.user?.is_admin) {
-            return await client.chat.postEphemeral({
+            await client.chat.postEphemeral({
                 channel: channel,
                 user: admin_id,
                 text: 'You must be an admin',
             });
+            return;
         }
 
         const existingSlowmode = await prisma.slowmode.findUnique({
@@ -32,11 +33,12 @@ async function slowmode_disable_button(args) {
         });
 
         if (!existingSlowmode || !existingSlowmode.locked) {
-            return await client.chat.postEphemeral({
+            await client.chat.postEphemeral({
                 channel: channel,
                 user: admin_id,
                 text: `No active slowmode in <#${channel}>`,
             });
+            return;
         } else {
             await prisma.slowmode.update({
                 where: {
