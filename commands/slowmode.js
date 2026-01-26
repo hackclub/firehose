@@ -32,8 +32,6 @@ async function slowmode(args) {
         where: { channel: channel },
     });
 
-    // TODO: Slowmode for specific threads similar to threadlocker
-
     const isUpdate = existingSlowmode && existingSlowmode.locked;
     const defaultTime = (existingSlowmode?.time || 5).toString();
     const defaultExpiry = existingSlowmode?.expiresAt
