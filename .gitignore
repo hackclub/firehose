@@ -1,8 +1,8 @@
 node_modules
 dist
+generated
 .env
 
-# Package logs
 pnpm-lock.yaml
 
 .DS_Store
