@@ -1,4 +1,5 @@
 import { client, userClient } from '../../client.js';
+import { runWithConcurrency } from '../helpers.js';
 import type { ChatPostMessageResponse } from '@slack/web-api';
 
 export async function deleteMessage(channel: string, ts: string): Promise<void> {
@@ -6,6 +7,19 @@ export async function deleteMessage(channel: string, ts: string): Promise<void> 
         channel,
         ts,
     });
+}
+
+export async function deleteMessages(channel: string, timestamps: string[], concurrency = 5): Promise<number> {
+    let successCount = 0;
+    await runWithConcurrency(timestamps, concurrency, async (ts) => {
+        try {
+            await deleteMessage(channel, ts);
+            successCount++;
+        } catch (e) {
+            console.error(`Failed to delete message ${ts}:`, e);
+        }
+    });
+    return successCount;
 }
 
 export async function postEphemeral(

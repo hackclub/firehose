@@ -4,48 +4,47 @@ import { getPrisma, postMessage, getThreadLink, logInternal } from '../../utils/
 async function slowmodeModal({ ack, body }: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
     const prisma = getPrisma();
 
-    try {
-        const view = body.view;
-        const metadata = JSON.parse(view.private_metadata);
-        const { channel_id, admin_id, command_channel } = metadata;
-        const submittedValues = view.state.values as Record<string, Record<string, any>>;
-        const slowmodeTime = parseInt(
-            submittedValues.slowmode_time_block.slowmode_time_input.value || '0'
-        );
-        const slowmodeDuration =
-            submittedValues.slowmode_duration_block.slowmode_duration_input.selected_date_time;
-        const reason = submittedValues.slowmode_reason_block.slowmode_reason_input.value || '';
-        const whitelistedUsers: string[] =
-            submittedValues.slowmode_whitelist_block.slowmode_whitelist_input.selected_users || [];
-        const applyToThreadsOptions: { value: string }[] =
-            submittedValues.slowmode_apply_to_threads_block?.slowmode_apply_to_threads_input
-                ?.selected_options || [];
-        const applyToThreads = applyToThreadsOptions.some(
-            (opt) => opt.value === 'apply_to_threads'
-        );
-        const errors: Record<string, string> = {};
+    const view = body.view;
+    const metadata = JSON.parse(view.private_metadata);
+    const { channel_id, admin_id, command_channel } = metadata;
+    const submittedValues = view.state.values as Record<string, Record<string, any>>;
+    const slowmodeTime = parseInt(
+        submittedValues.slowmode_time_block.slowmode_time_input.value || '0'
+    );
+    const slowmodeDuration =
+        submittedValues.slowmode_duration_block.slowmode_duration_input.selected_date_time;
+    const reason = submittedValues.slowmode_reason_block.slowmode_reason_input.value || '';
+    const whitelistedUsers: string[] =
+        submittedValues.slowmode_whitelist_block.slowmode_whitelist_input.selected_users || [];
+    const applyToThreadsOptions: { value: string }[] =
+        submittedValues.slowmode_apply_to_threads_block?.slowmode_apply_to_threads_input
+            ?.selected_options || [];
+    const applyToThreads = applyToThreadsOptions.some((opt) => opt.value === 'apply_to_threads');
+    const errors: Record<string, string> = {};
 
-        let expiresAt: Date | null = null;
-        if (slowmodeDuration) {
-            expiresAt = new Date(slowmodeDuration * 1000);
-            if (expiresAt <= new Date()) {
-                errors.slowmode_duration_block = 'Time cannot be in the past.';
-            }
+    let expiresAt: Date | null = null;
+    if (slowmodeDuration) {
+        expiresAt = new Date(slowmodeDuration * 1000);
+        if (expiresAt <= new Date()) {
+            errors.slowmode_duration_block = 'Time cannot be in the past.';
         }
-        if (slowmodeTime < 1) {
-            errors.slowmode_time_block = 'Invalid slowmode interval';
-        }
+    }
+    if (slowmodeTime < 1) {
+        errors.slowmode_time_block = 'Invalid slowmode interval';
+    }
 
-        if (Object.keys(errors).length > 0) {
-            return await ack({
-                response_action: 'errors',
-                errors: errors,
-            });
-        }
+    if (Object.keys(errors).length > 0) {
+        await ack({
+            response_action: 'errors',
+            errors: errors,
+        });
+        return;
+    }
 
-        await ack();
+    ack();
 
-        await prisma.slowmode.upsert({
+    await Promise.all([
+        prisma.slowmode.upsert({
             where: {
                 channel_threadTs: {
                     channel: channel_id,
@@ -73,9 +72,9 @@ async function slowmodeModal({ ack, body }: SlackViewMiddlewareArgs & AllMiddlew
                 applyToThreads: applyToThreads,
                 updatedAt: new Date(),
             },
-        });
+        }),
 
-        await prisma.$transaction([
+        prisma.$transaction([
             prisma.slowUsers.updateMany({
                 where: {
                     channel: channel_id,
@@ -104,67 +103,67 @@ async function slowmodeModal({ ack, body }: SlackViewMiddlewareArgs & AllMiddlew
                     update: { whitelist: true },
                 })
             ),
-        ]);
+        ]),
+    ]);
 
-        const expiryText = expiresAt
-            ? `until ${expiresAt.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST`
-            : 'indefinitely';
+    const expiryText = expiresAt
+        ? `until ${expiresAt.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST`
+        : 'indefinitely';
 
-        const reasonText = reason ? `${reason}` : '(none provided)';
-        const threadText = applyToThreads ? ' (including threads)' : '';
+    const reasonText = reason ? `${reason}` : '(none provided)';
+    const threadText = applyToThreads ? ' (including threads)' : '';
 
-        await logInternal(
-            `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in <#${channel_id}>${threadText} for ${reasonText} ${expiryText}`
-        );
-
-        await postMessage(
+    await Promise.all([
+        postMessage(
             channel_id,
             `A ${slowmodeTime} second Slowmode has been enabled in this channel${threadText} ${expiryText}`
-        );
-    } catch (e) {
-        console.error(e);
-    }
+        ),
+        logInternal(
+            `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in <#${channel_id}>${threadText} for ${reasonText} ${expiryText}`
+        ),
+    ]);
 }
 
 async function slowmodeThreadModal({ ack, body }: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
     const prisma = getPrisma();
 
-    try {
-        const view = body.view;
-        const metadata = JSON.parse(view.private_metadata);
-        const { channel_id, admin_id, command_channel, thread_ts } = metadata;
-        const submittedValues = view.state.values as Record<string, Record<string, any>>;
-        const slowmodeTime = parseInt(
-            submittedValues.slowmode_time_block.slowmode_time_input.value || '0'
-        );
-        const slowmodeDuration =
-            submittedValues.slowmode_duration_block.slowmode_duration_input.selected_date_time;
-        const reason = submittedValues.slowmode_reason_block.slowmode_reason_input.value || '';
-        const whitelistedUsers: string[] =
-            submittedValues.slowmode_whitelist_block.slowmode_whitelist_input.selected_users || [];
-        const errors: Record<string, string> = {};
+    const view = body.view;
+    const metadata = JSON.parse(view.private_metadata);
+    const { channel_id, admin_id, command_channel, thread_ts } = metadata;
+    const submittedValues = view.state.values as Record<string, Record<string, any>>;
+    const slowmodeTime = parseInt(
+        submittedValues.slowmode_time_block.slowmode_time_input.value || '0'
+    );
+    const slowmodeDuration =
+        submittedValues.slowmode_duration_block.slowmode_duration_input.selected_date_time;
+    const reason = submittedValues.slowmode_reason_block.slowmode_reason_input.value || '';
+    const whitelistedUsers: string[] =
+        submittedValues.slowmode_whitelist_block.slowmode_whitelist_input.selected_users || [];
+    const errors: Record<string, string> = {};
 
-        let expiresAt: Date | null = null;
-        if (slowmodeDuration) {
-            expiresAt = new Date(slowmodeDuration * 1000);
-            if (expiresAt <= new Date()) {
-                errors.slowmode_duration_block = 'Time cannot be in the past.';
-            }
+    let expiresAt: Date | null = null;
+    if (slowmodeDuration) {
+        expiresAt = new Date(slowmodeDuration * 1000);
+        if (expiresAt <= new Date()) {
+            errors.slowmode_duration_block = 'Time cannot be in the past.';
         }
-        if (slowmodeTime < 1) {
-            errors.slowmode_time_block = 'Invalid slowmode interval';
-        }
+    }
+    if (slowmodeTime < 1) {
+        errors.slowmode_time_block = 'Invalid slowmode interval';
+    }
 
-        if (Object.keys(errors).length > 0) {
-            return await ack({
-                response_action: 'errors',
-                errors: errors,
-            });
-        }
+    if (Object.keys(errors).length > 0) {
+        await ack({
+            response_action: 'errors',
+            errors: errors,
+        });
+        return;
+    }
 
-        await ack();
+    ack();
 
-        await prisma.slowmode.upsert({
+    await Promise.all([
+        prisma.slowmode.upsert({
             where: {
                 channel_threadTs: {
                     channel: channel_id,
@@ -190,9 +189,9 @@ async function slowmodeThreadModal({ ack, body }: SlackViewMiddlewareArgs & AllM
                 whitelistedUsers: whitelistedUsers,
                 updatedAt: new Date(),
             },
-        });
+        }),
 
-        await prisma.$transaction([
+        prisma.$transaction([
             prisma.slowUsers.updateMany({
                 where: {
                     channel: channel_id,
@@ -221,26 +220,25 @@ async function slowmodeThreadModal({ ack, body }: SlackViewMiddlewareArgs & AllM
                     update: { whitelist: true },
                 })
             ),
-        ]);
+        ]),
+    ]);
 
-        const expiryText = expiresAt
-            ? `until ${expiresAt.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST`
-            : 'indefinitely';
+    const expiryText = expiresAt
+        ? `until ${expiresAt.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST`
+        : 'indefinitely';
 
-        const reasonText = reason ? `${reason}` : '(none provided)';
+    const reasonText = reason ? `${reason}` : '(none provided)';
 
-        await logInternal(
-            `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in ${getThreadLink(channel_id, thread_ts)} for ${reasonText} ${expiryText}`
-        );
-
-        await postMessage(
+    await Promise.all([
+        postMessage(
             channel_id,
             `A ${slowmodeTime} second Slowmode has been enabled in this thread ${expiryText}`,
             thread_ts
-        );
-    } catch (e) {
-        console.error(e);
-    }
+        ),
+         logInternal(
+            `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in ${getThreadLink(channel_id, thread_ts)} for ${reasonText} ${expiryText}`
+        ),
+    ]);
 }
 
 export { slowmodeModal, slowmodeThreadModal };

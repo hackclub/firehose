@@ -11,12 +11,13 @@ async function unbanCommand({
     payload: { user_id, text, channel_id },
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const prisma = getPrisma();
 
     const isAdmin = await isUserAdmin(user_id);
     if (!isAdmin) {
-        return await postEphemeral(channel_id, user_id, 'Only admins can run this command.');
+        await postEphemeral(channel_id, user_id, 'Only admins can run this command.');
+        return;
     }
 
     const commands = text.split(' ');
@@ -24,14 +25,18 @@ async function unbanCommand({
     let channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
 
     if (!userToBan || !channel) {
-        return await postEphemeral(channel_id, user_id, 'Invalid arguments');
+        await postEphemeral(channel_id, user_id, 'Invalid arguments');
+        return;
     }
 
     await prisma.user.deleteMany({
         where: { user: userToBan, channel: channel },
     });
-    await postMessage(userToBan, `You were unbanned from <#${channel}>`);
-    await logInternal(`<@${userToBan}> was unbanned from <#${channel}>`);
+
+    await Promise.all([
+        postMessage(userToBan, `You were unbanned from <#${channel}>`),
+        logInternal(`<@${userToBan}> was unbanned from <#${channel}>`),
+    ]);
 }
 
 export default unbanCommand;

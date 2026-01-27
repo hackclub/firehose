@@ -1,5 +1,5 @@
 import type { AllMiddlewareArgs, SlackCommandMiddlewareArgs } from '@slack/bolt';
-import { isUserAdmin, deleteMessage, logInternal } from '../../utils/index.js';
+import { isUserAdmin, deleteMessages, logInternal } from '../../utils/index.js';
 
 async function purgeCommand({
     payload: { user_id, text, channel_id },
@@ -7,64 +7,52 @@ async function purgeCommand({
     respond,
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const commands = text.split(' ');
     const isAdmin = await isUserAdmin(user_id);
-    if (!isAdmin) return;
-    if (!commands[0]) return respond(`:x: You need to specify a number of messages to purge. :P`);
-
+    if (!isAdmin) {
+        await respond(`:x: Only admins can run this command.`);
+        return;
+    }
+    if (!commands[0]) {
+        await respond(`:x: You need to specify a number of messages to purge. :P`);
+        return;
+    }
     let amount = parseInt(commands[0]);
-    if (isNaN(amount)) return respond(`:x: You need to specify a number of messages to purge. :P`);
-    if (amount < 0 || amount > 100)
-        return respond(
-            `:x: You need to specify a valid number of messages to purge. (must be under 100 and above 0)`
-        );
-    const userId = commands[1];
-    if (userId) {
-        const user = await client.users
-            .info({ user: userId })
-            .catch(() => ({ ok: false, user: undefined }));
-        if (!user.ok) return respond(`:x: User \`${userId}\` does not exist.`);
-        if (user.user?.is_admin)
-            return respond(
-                `:x: User <@${userId}> is an admin. Cannot directly purge messages from admin.`
-            );
+    if (isNaN(amount)) {
+        await respond(`:x: You need to specify a valid number of messages to purge.`);
+        return;
+    }
+    if (amount < 1) {
+        await respond(`:x: You need to specify a valid number of messages to purge. (must be above 0)`);
+        return;
     }
 
     const stamp = Date.now();
     const purgeMessage = await client.chat.postMessage({
-        text: `:spin-loading: Purging \`${amount}\` messages ${
-            userId ? `from user <@${userId}>` : ''
-        }`,
+        text: `:spin-loading: Purging \`${amount}\` messages`,
         channel: channel_id,
     });
 
-    const fetchLimit = userId ? Math.max(amount * 2, 100) : amount + 1;
-    const currentMessages = await client.conversations.history({
-        channel: channel_id,
-        limit: fetchLimit,
-    });
-    const messagesToDelete = (currentMessages.messages ?? [])
-        .filter((msg) => {
-            if (!msg.ts) return false;
-            if (msg.ts === purgeMessage.ts) return false;
-            if (userId && msg.user !== userId) return false;
-            return true;
-        })
-        .slice(0, amount);
-
-    let deleted = 0;
-    let failed = 0;
-    for (const msg of messagesToDelete) {
-        try {
-            if (!msg.ts) throw new Error('Message missing ts');
-            await deleteMessage(channel_id, msg.ts);
-            deleted++;
-        } catch (e) {
-            failed++;
-            console.error(`Failed to delete message ${msg.ts}:`, e);
+    const messagesToDelete: string[] = [];
+    let cursor: string | undefined;
+    while (messagesToDelete.length < amount) {
+        const response = await client.conversations.history({
+            channel: channel_id,
+            limit: Math.min(500, amount - messagesToDelete.length + 1),
+            cursor,
+        });
+        for (const msg of response.messages ?? []) {
+            if (!msg.ts || msg.ts === purgeMessage.ts) continue;
+            messagesToDelete.push(msg.ts);
+            if (messagesToDelete.length >= amount) break;
         }
+        cursor = response.response_metadata?.next_cursor;
+        if (!cursor) break;
     }
+
+    const deleted = await deleteMessages(channel_id, messagesToDelete);
+    const failed = messagesToDelete.length - deleted;
 
     if (!purgeMessage.ts) return;
     const elapsed = Math.floor((Date.now() - stamp) / 1000);
@@ -72,14 +60,10 @@ async function purgeCommand({
         client.chat.update({
             channel: channel_id,
             ts: purgeMessage.ts,
-            text: `:white_check_mark: Purged \`${deleted}/${messagesToDelete.length}\` messages${
-                userId ? ` from <@${userId}>` : ''
-            }${failed ? ` (${failed} failed)` : ''} in \`${elapsed}s\``,
+            text: `:white_check_mark: Purged \`${deleted}/${messagesToDelete.length}\` messages${failed ? ` (${failed} failed)` : ''} in \`${elapsed}s\``,
         }),
         logInternal(
-            `<@${user_id}> purged \`${deleted}/${messagesToDelete.length}\` messages${
-                userId ? ` from <@${userId}>` : ''
-            }${failed ? ` (${failed} failed)` : ''} in \`${elapsed}s\``
+            `<@${user_id}> purged \`${deleted}/${messagesToDelete.length}\` messages${failed ? ` (${failed} failed)` : ''} in \`${elapsed}s\``
         ),
     ]);
 }

@@ -28,48 +28,50 @@ async function messageListener({
 
     if (!thread || !thread.time) return;
 
-    try {
-        if (thread.active && thread.time > new Date()) {
-            try {
-                await client.conversations.join({
+    if (thread.active && thread.time > new Date()) {
+        const [, isAdmin] = await Promise.all([
+            client.conversations
+                .join({
                     channel: message.channel,
-                });
-            } catch (e) {}
+                })
+                .catch(() => {}),
+            isUserAdmin(message.user),
+        ]);
 
-            const isAdmin = await isUserAdmin(message.user);
-            if (!isAdmin) {
-                await postEphemeral(
+        if (!isAdmin) {
+            await Promise.all([
+                deleteMessage(message.channel, message.ts),
+                postEphemeral(
                     message.channel,
                     message.user,
                     `Sorry, the thread is currently locked until ${thread.time.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST. For reference, your message was: \`${message.text}\``,
                     thread_ts
-                );
+                ),
+            ]);
+        }
+    } else if (thread.active && thread.time < new Date()) {
+        await prisma.thread.update({
+            where: {
+                id: thread_ts,
+            },
+            data: {
+                active: false,
+            },
+        });
 
-                await deleteMessage(message.channel, message.ts);
-            }
-        } else if (thread.active && thread.time < new Date()) {
-            if (thread.channel) {
-                await logBoth(
-                    `🔓 Thread unlocked in <#${message.channel}>
+        await Promise.all([
+            ...(thread.channel
+                ? [
+                      logBoth(
+                          `🔓 Thread unlocked in <#${message.channel}>
 Reason: Autounlock (triggered by message)
 Admin: System
 Link: ${getThreadLink(thread.channel, thread.id)}`
-                );
-            }
-
-            await prisma.thread.update({
-                where: {
-                    id: thread_ts,
-                },
-                data: {
-                    active: false,
-                },
-            });
-
-            await removeReaction(message.channel, 'lock', thread_ts);
-        }
-    } catch (e) {
-        console.error(e);
+                      ),
+                  ]
+                : []),
+            removeReaction(message.channel, 'lock', thread_ts),
+        ]);
     }
 }
 

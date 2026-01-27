@@ -5,13 +5,14 @@ import {
     isUserAdmin,
     postEphemeral,
     logInternal,
+    PrismaClientKnownRequestError,
 } from '../../utils/index.js';
 
 async function whitelistCommand({
     payload: { text, channel_id, user_id },
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
 
@@ -32,42 +33,36 @@ async function whitelistCommand({
 
     if (errors.length > 0) return await postEphemeral(channel_id, user_id, errors.join('\n'));
 
-    const getChannel = await prisma.channel.findFirst({
-        where: {
-            id: channel,
-            readOnly: true,
-        },
-    });
-
-    if (getChannel) {
-        try {
-            await prisma.channel.update({
-                where: {
-                    id: channel,
-                },
-                data: {
-                    allowlist: {
-                        push: userToAdd,
-                    },
-                },
-            });
-        } catch (e) {
-            console.error(e);
-        }
-        const finalResult = await prisma.channel.findFirst({
+    try {
+        await prisma.channel.update({
             where: {
                 id: channel,
-                readOnly: true,
+            },
+            data: {
+                allowlist: {
+                    push: userToAdd,
+                },
             },
         });
 
-        try {
-            await logInternal(
-                `<@${user_id}> added <@${userToAdd}> to the whitelist for <#${channel}>`
+        await Promise.all([
+            postEphemeral(
+                channel_id,
+                user_id,
+                `<@${userToAdd}> has been added to the whitelist for <#${channel}>`
+            ),
+            logInternal(`<@${user_id}> added <@${userToAdd}> to the whitelist for <#${channel}>`),
+        ]);
+    } catch (e) {
+        if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+            await postEphemeral(
+                channel_id,
+                user_id,
+                `<#${channel}> is not configured as read-only. Use /readonly to make it read-only first.`
             );
-        } catch (e) {
-            console.error(e);
+            return;
         }
+        throw e;
     }
 }
 

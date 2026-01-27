@@ -22,7 +22,7 @@ async function slowmodeDisableButton({
     const prisma = getPrisma();
 
     try {
-        await ack();
+        ack();
 
         const data = JSON.parse(actions[0].value || '{}');
         const { channel, threadTs } = data;
@@ -101,7 +101,7 @@ async function slowmodeThreadDisableButton({
     const prisma = getPrisma();
 
     try {
-        await ack();
+        ack();
 
         const data: { channel: string; threadTs: string } = JSON.parse(actions[0].value || '{}');
         const { channel, threadTs } = data;

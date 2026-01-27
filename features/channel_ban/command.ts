@@ -11,7 +11,7 @@ async function channelBanCommand({
     payload: { user_id, text, channel_id },
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const prisma = getPrisma();
 
     const isAdmin = await isUserAdmin(user_id);
@@ -31,8 +31,6 @@ async function channelBanCommand({
         return await postEphemeral(channel_id, user_id, errors.join('\n'));
 
     try {
-        await logInternal(`<@${user_id}> banned <@${userToBan}> from <#${channel}> for ${reason}`);
-
         await prisma.user.create({
             data: {
                 admin: user_id,
@@ -42,16 +40,18 @@ async function channelBanCommand({
             },
         });
 
-        await postMessage(
-            userToBan,
-            `You've been banned from <#${channel}>. A Fire Dept (community moderator) will reach out to you shortly with the reason`
-        );
-
-        await postEphemeral(
-            channel_id,
-            user_id,
-            `<@${userToBan}> has been banned from <#${channel}> for ${reason}`
-        );
+        await Promise.all([
+            postEphemeral(
+                channel_id,
+                user_id,
+                `<@${userToBan}> has been banned from <#${channel}> for ${reason}`
+            ),
+            postMessage(
+                userToBan,
+                `You've been banned from <#${channel}>. A Fire Dept (community moderator) will reach out to you shortly with the reason`
+            ),
+            logInternal(`<@${user_id}> banned <@${userToBan}> from <#${channel}> for ${reason}`),
+        ]);
     } catch (e) {
         await postEphemeral(channel_id, user_id, `An error occured: ${e}`);
     }

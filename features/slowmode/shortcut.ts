@@ -12,7 +12,7 @@ async function slowmodeThreadShortcut({
     }
     const { user, channel, message, trigger_id } = body;
 
-    await ack();
+    ack();
 
     const prisma = getPrisma();
     const threadTs = message.thread_ts || message.ts;

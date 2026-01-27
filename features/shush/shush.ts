@@ -11,7 +11,7 @@ async function shushCommand({
     payload: { user_id, text, channel_id },
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const prisma = getPrisma();
 
     const isAdmin = await isUserAdmin(user_id);
@@ -20,46 +20,41 @@ async function shushCommand({
     const reason = commands.slice(1).join(' ');
 
     if (!isAdmin) {
-        return await postEphemeral(
-            channel_id,
-            user_id,
-            "You don't have permission to use this command."
-        );
+        await postEphemeral(channel_id, user_id, "You don't have permission to use this command.");
+        return;
     }
 
     const errors: string[] = [];
     if (!reason) errors.push('A reason is required.');
     if (!userToBan) errors.push('A user is required.');
 
-    if (errors.length > 0 || !userToBan)
-        return await postEphemeral(channel_id, user_id, errors.join('\n'));
+    if (errors.length > 0 || !userToBan) {
+        await postEphemeral(channel_id, user_id, errors.join('\n'));
+        return;
+    }
 
-    try {
-        await logInternal(
-            `<@${user_id}> shushed <@${userToBan}> from all Slack channels. ${reason ? `for ${reason}` : ''}`
-        );
+    await prisma.bans.create({
+        data: {
+            admin: user_id,
+            reason: reason,
+            user: userToBan,
+        },
+    });
 
-        await prisma.bans.create({
-            data: {
-                admin: user_id,
-                reason: reason,
-                user: userToBan,
-            },
-        });
-
-        await postMessage(
+    await Promise.all([
+        postMessage(
             userToBan,
             "You've been banned from talking in all Slack channels for a short period of time. A FD member will reach out to you shortly."
-        );
-
-        await postEphemeral(
+        ),
+        postEphemeral(
             channel_id,
             user_id,
             `<@${userToBan}> has been shushed from all channels for ${reason}`
-        );
-    } catch (e) {
-        await postEphemeral(channel_id, user_id, `An error occured: ${e}`);
-    }
+        ),
+        logInternal(
+            `<@${user_id}> shushed <@${userToBan}> from all Slack channels. ${reason ? `for ${reason}` : ''}`
+        ),
+    ]);
 }
 
 export default shushCommand;

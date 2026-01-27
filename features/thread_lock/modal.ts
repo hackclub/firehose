@@ -5,15 +5,10 @@ function registerModal(app: App) {
     const prisma = getPrisma();
 
     app.view('lock_modal', async ({ view, ack, body, respond }) => {
-        let json: { thread_id: string; channel_id: string };
-        try {
-            json = JSON.parse(view.private_metadata);
-        } catch (e) {
-            await ack();
-            return respond('Something bad happened. Likely more than one instance is running.');
-        }
-        const thread_id = json.thread_id;
-        const channel_id = json.channel_id;
+        let { thread_id, channel_id } = JSON.parse(view.private_metadata) as {
+            thread_id: string;
+            channel_id: string;
+        };
 
         const submittedValues = view.state.values;
         let reason: string | undefined;
@@ -31,95 +26,86 @@ function registerModal(app: App) {
         }
 
         if (!reason) {
-            return await ack({
+            await ack({
                 response_action: 'errors',
                 errors: {
                     'plain_text_input-action': 'Please provide a reason.',
                 },
             });
+            return;
         }
         if (!expires) {
-            return await ack({
+            await ack({
                 response_action: 'errors',
                 errors: {
                     'datetimepicker-action': 'Please provide an expiration time.',
                 },
             });
+            return;
         }
         if (new Date() > expires) {
-            return await ack({
+            await ack({
                 response_action: 'errors',
                 errors: {
                     'datetimepicker-action': 'Time cannot be in the past.',
                 },
             });
+            return;
         }
 
-        await ack();
+        ack();
 
-        const thread = await prisma.thread.findFirst({
-            where: {
-                id: thread_id,
-            },
-        });
-
-        await prisma.log.create({
-            data: {
-                thread_id: thread_id,
-                admin: body.user.id,
-                lock_type: 'lock',
-                time: expires,
-                reason,
-                channel: channel_id,
-                active: true,
-            },
-        });
-
-        if (!thread) {
-            await prisma.thread.create({
+        await Promise.all([
+            prisma.log.create({
                 data: {
-                    id: thread_id,
+                    thread_id: thread_id,
                     admin: body.user.id,
-                    lock_type: 'test',
+                    lock_type: 'lock',
                     time: expires,
                     reason,
                     channel: channel_id,
                     active: true,
                 },
-            });
-        } else {
-            await prisma.thread.update({
+            }),
+
+            prisma.thread.upsert({
                 where: {
                     id: thread_id,
                 },
-                data: {
+                create: {
                     id: thread_id,
                     admin: body.user.id,
-                    lock_type: 'test',
+                    lock_type: 'lock',
                     time: expires,
                     reason,
                     channel: channel_id,
                     active: true,
                 },
-            });
-        }
+                update: {
+                    admin: body.user.id,
+                    lock_type: 'lock',
+                    time: expires,
+                    reason,
+                    channel: channel_id,
+                    active: true,
+                },
+            }),
+        ]);
 
-        await postMessage(
-            channel_id,
-            `🔒 Thread locked. Reason: ${reason} (until: ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST)`,
-            thread_id
-        );
-
-        await logBoth(
-            `🔒 Thread locked in <#${channel_id}>
+        await Promise.all([
+            postMessage(
+                channel_id,
+                `🔒 Thread locked. Reason: ${reason} (until: ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST)`,
+                thread_id
+            ),
+            logBoth(
+                `🔒 Thread locked in <#${channel_id}>
 Reason: ${reason}
 Expires: ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} (EST)
 Link: ${getThreadLink(channel_id, thread_id)}`
-        );
-
-        try {
-            await addReaction(channel_id, 'lock', thread_id);
-        } catch (e) {}
+            ),
+            addReaction(channel_id, 'lock', thread_id),
+        ]);
     });
 }
 

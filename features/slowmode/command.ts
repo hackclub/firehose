@@ -7,7 +7,7 @@ async function slowmodeCommand({
     client,
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
     const isAdmin = await isUserAdmin(user_id);

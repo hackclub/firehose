@@ -5,7 +5,7 @@ async function banListCommand({
     payload: { user_id, channel_id },
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const prisma = getPrisma();
 
     const isAdmin = await isUserAdmin(user_id);

@@ -7,37 +7,32 @@ async function listenForBannedUser({
 }: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs) {
     if (!payload || !payload.type || payload.type !== 'message' || !('user' in payload)) return;
     const { user, ts, text, channel, subtype } = payload;
-    const prisma = getPrisma();
     if (subtype === 'bot_message' || !user) return;
-    const userID = user;
-    const slackChannel = channel;
+
+    const prisma = getPrisma();
     let userData = await prisma.bans.findFirst({
         where: {
-            user: userID,
+            user,
         },
     });
-
     if (!userData) return;
 
-    try {
-        await deleteMessage(slackChannel, ts);
-    } catch (e) {
-        console.error(e);
-    }
-    try {
-        await userClient.conversations.kick({
-            channel: slackChannel,
-            user: userID,
-        });
-    } catch (e) {
-        console.log('kicking failed');
-    }
-
-    await postEphemeral(
-        channel,
-        user,
-        `Your message has been deleted because you're muted for ${userData.reason}`
-    );
+    await Promise.all([
+        deleteMessage(channel, ts),
+        userClient.conversations
+            .kick({
+                channel,
+                user,
+            })
+            .catch((e) => {
+                console.error(`Failed to kick user ${user} from channel ${channel}:`, e);
+            }),
+        postEphemeral(
+            channel,
+            user,
+            `Your message has been deleted because you're muted for ${userData.reason}\n\nYour message was:\n${text}`
+        ),
+    ]);
 }
 
 export default listenForBannedUser;

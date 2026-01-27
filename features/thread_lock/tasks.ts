@@ -16,37 +16,37 @@ function startAutoUnlock() {
         for (const thread of threads) {
             if (!thread.channel) continue;
 
-            await logBoth(
-                `🔓 Thread unlocked in <#${thread.channel}>
+            await Promise.all([
+                prisma.log.create({
+                    data: {
+                        thread_id: thread.id,
+                        admin: 'system',
+                        lock_type: 'unlock',
+                        time: new Date(),
+                        reason: 'Autounlock (cron job)',
+                        channel: thread.channel,
+                        active: false,
+                    },
+                }),
+                prisma.thread.update({
+                    where: {
+                        id: thread.id,
+                    },
+                    data: {
+                        active: false,
+                    },
+                }),
+            ]);
+
+            await Promise.all([
+                logBoth(
+                    `🔓 Thread unlocked in <#${thread.channel}>
 Reason: Autounlock (triggered by cron job)
 Admin: System
 Link: ${getThreadLink(thread.channel, thread.id)}`
-            );
-
-            await prisma.log.create({
-                data: {
-                    thread_id: thread.id,
-                    admin: 'system',
-                    lock_type: 'unlock',
-                    time: new Date(),
-                    reason: 'Autounlock (cron job)',
-                    channel: thread.channel,
-                    active: false,
-                },
-            });
-
-            try {
-                await removeReaction(thread.channel, 'lock', thread.id);
-            } catch (e) {}
-
-            await prisma.thread.update({
-                where: {
-                    id: thread.id,
-                },
-                data: {
-                    active: false,
-                },
-            });
+                ),
+                removeReaction(thread.channel, 'lock', thread.id),
+            ]);
         }
     }
 

@@ -11,26 +11,29 @@ async function unshushCommand({
     payload: { user_id, text, channel_id },
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
     const isAdmin = await isUserAdmin(user_id);
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
 
     if (!isAdmin) {
-        return await postEphemeral(channel_id, user_id, 'Only admins can run this command.');
+        await postEphemeral(channel_id, user_id, 'Only admins can run this command.');
+        return;
     }
     if (!userToBan) {
-        return await postEphemeral(channel_id, user_id, 'You need to specify a user to unshush.');
+        await postEphemeral(channel_id, user_id, 'You need to specify a user to unshush.');
+        return;
     }
-
-    await logInternal(`<@${userToBan}> was unshushed`);
 
     await prisma.bans.deleteMany({
         where: { user: userToBan },
     });
 
-    await postMessage(userToBan, `You were unshushed`);
+    await Promise.all([
+        postMessage(userToBan, `You were unshushed`),
+        logInternal(`<@${userToBan}> was unshushed`),
+    ]);
 }
 
 export default unshushCommand;

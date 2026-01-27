@@ -11,7 +11,7 @@ async function readOnlyCommand({
     payload: { text, channel_id, user_id },
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
-    await ack();
+    ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
     const channel = commands[0].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
@@ -42,16 +42,20 @@ async function readOnlyCommand({
                     allowlist: [`${user_id}`],
                 },
             });
-            await logInternal(`<#${channel}> was made read-only by <@${user_id}>`);
-            await postEphemeral(channel, user_id, `<#${channel}> has been made read only`);
+            await Promise.all([
+                logInternal(`<#${channel}> was made read-only by <@${user_id}>`),
+                postEphemeral(channel, user_id, `<#${channel}> has been made read only`),
+            ]);
         } else {
             await prisma.channel.delete({
                 where: {
                     id: channel,
                 },
             });
-            await logInternal(`<#${channel}> was made no longer read-only by <@${user_id}>`);
-            await postEphemeral(channel, user_id, `<#${channel}> is no longer read only`);
+            await Promise.all([
+                logInternal(`<#${channel}> was made no longer read-only by <@${user_id}>`),
+                postEphemeral(channel, user_id, `<#${channel}> is no longer read only`),
+            ]);
         }
     } catch (e) {
         console.log(e);

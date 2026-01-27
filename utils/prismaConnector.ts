@@ -1,4 +1,4 @@
-import { PrismaClient } from '../node_modules/.prisma/client/client.js';
+import { Prisma, PrismaClient } from '../node_modules/.prisma/client/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 
@@ -12,3 +12,5 @@ export function getPrisma(): PrismaClient {
     }
     return prismaClient;
 }
+
+export const PrismaClientKnownRequestError = Prisma.PrismaClientKnownRequestError;
