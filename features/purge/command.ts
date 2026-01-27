@@ -11,11 +11,10 @@ async function purgeCommand({
     const commands = text.split(' ');
     const isAdmin = await isUserAdmin(user_id);
     if (!isAdmin) return;
-    if (commands.length < 1)
-        return respond(`:x: You need to specify a number of messages to purge. :P`);
+    if (!commands[0]) return respond(`:x: You need to specify a number of messages to purge. :P`);
 
     let amount = parseInt(commands[0]);
-    if (isNaN(amount)) return respond(`:x: You need to specify a number of messages to purge.`);
+    if (isNaN(amount)) return respond(`:x: You need to specify a number of messages to purge. :P`);
     if (amount < 0 || amount > 100)
         return respond(
             `:x: You need to specify a valid number of messages to purge. (must be under 100 and above 0)`
@@ -40,9 +39,10 @@ async function purgeCommand({
         channel: channel_id,
     });
 
+    const fetchLimit = userId ? Math.max(amount * 2, 100) : amount + 1;
     const currentMessages = await client.conversations.history({
         channel: channel_id,
-        limit: amount + 1,
+        limit: fetchLimit,
     });
     const messagesToDelete = (currentMessages.messages ?? [])
         .filter((msg) => {

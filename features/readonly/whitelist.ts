@@ -14,11 +14,15 @@ async function whitelistCommand({
     await ack();
     const prisma = getPrisma();
     const commands = text.split(' ');
+
+    if (commands.length < 2) {
+        return await postEphemeral(channel_id, user_id, 'Usage: /whitelist @user #channel');
+    }
+
     const channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
     const userToAdd = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
     const isAdmin = await isUserAdmin(user_id);
     const channelManagers = await getChannelManagers(channel_id);
-    console.info(channelManagers);
 
     const errors: string[] = [];
     if (!isAdmin && !channelManagers.includes(user_id))
@@ -35,10 +39,7 @@ async function whitelistCommand({
         },
     });
 
-    console.log(getChannel);
     if (getChannel) {
-        console.log('this is whitelisting');
-        console.log('I am trying');
         try {
             await prisma.channel.update({
                 where: {
@@ -51,7 +52,7 @@ async function whitelistCommand({
                 },
             });
         } catch (e) {
-            console.log('Error:', e);
+            console.error(e);
         }
         const finalResult = await prisma.channel.findFirst({
             where: {
@@ -59,9 +60,6 @@ async function whitelistCommand({
                 readOnly: true,
             },
         });
-
-        console.log('I did it');
-        console.log(`Added ${userToAdd} to ${channel}:`, finalResult);
 
         try {
             await logInternal(

@@ -24,7 +24,7 @@ async function slowmodeCommand({
     if (errors.length > 0) return await postEphemeral(channel_id, user_id, errors.join('\n'));
 
     const existingSlowmode = await prisma.slowmode.findFirst({
-        where: { channel: channel },
+        where: { channel: channel, threadTs: '' },
     });
 
     const isUpdate = existingSlowmode && existingSlowmode.locked;

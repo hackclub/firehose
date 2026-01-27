@@ -51,6 +51,7 @@ async function readOnlyCommand({
                 },
             });
             await logInternal(`<#${channel}> was made no longer read-only by <@${user_id}>`);
+            await postEphemeral(channel, user_id, `<#${channel}> is no longer read only`);
         }
     } catch (e) {
         console.log(e);

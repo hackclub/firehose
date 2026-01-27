@@ -1,10 +1,7 @@
 import type { SlackViewMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { getPrisma, postMessage, getThreadLink, logInternal } from '../../utils/index.js';
 
-async function slowmodeModal({
-    ack,
-    body,
-}: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
+async function slowmodeModal({ ack, body }: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
     const prisma = getPrisma();
 
     try {
@@ -129,10 +126,7 @@ async function slowmodeModal({
     }
 }
 
-async function slowmodeThreadModal({
-    ack,
-    body,
-}: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
+async function slowmodeThreadModal({ ack, body }: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
     const prisma = getPrisma();
 
     try {

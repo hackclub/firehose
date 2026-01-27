@@ -1,5 +1,5 @@
 import type { App } from '@slack/bolt';
-import type { ModalView } from '@slack/types';
+
 import {
     getPrisma,
     isUserAdmin,
@@ -9,7 +9,6 @@ import {
     logBoth,
     getThreadLink,
 } from '../../utils/index.js';
-import modalJson from './modal.json' with { type: 'json' };
 
 function registerShortcuts(app: App) {
     const prisma = getPrisma();
@@ -51,13 +50,61 @@ function registerShortcuts(app: App) {
             await client.views.open({
                 trigger_id: trigger_id,
                 view: {
-                    ...modalJson,
+                    type: 'modal',
                     callback_id: 'lock_modal',
                     private_metadata: JSON.stringify({
                         thread_id: thread_ts,
                         channel_id: channel.id,
                     }),
-                } as ModalView,
+                    title: {
+                        type: 'plain_text',
+                        text: 'Lock the thread',
+                        emoji: true,
+                    },
+                    submit: {
+                        type: 'plain_text',
+                        text: 'Submit',
+                        emoji: true,
+                    },
+                    close: {
+                        type: 'plain_text',
+                        text: 'Cancel',
+                        emoji: true,
+                    },
+                    blocks: [
+                        {
+                            type: 'section',
+                            text: {
+                                type: 'mrkdwn',
+                                text: 'Use this modal to lock the thread. Please note, this is logged.',
+                            },
+                        },
+                        {
+                            type: 'input',
+                            element: {
+                                type: 'plain_text_input',
+                                action_id: 'plain_text_input-action',
+                            },
+                            label: {
+                                type: 'plain_text',
+                                text: 'Reason',
+                                emoji: true,
+                            },
+                        },
+                        {
+                            type: 'input',
+                            element: {
+                                type: 'datetimepicker',
+                                action_id: 'datetimepicker-action',
+                            },
+                            label: {
+                                type: 'plain_text',
+                                text: 'Expires',
+                                emoji: true,
+                            },
+                        },
+                    ],
+                },
             });
             return;
         } else {

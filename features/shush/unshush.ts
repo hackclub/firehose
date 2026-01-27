@@ -1,8 +1,14 @@
 import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import { getPrisma, isUserAdmin, postMessage, logInternal } from '../../utils/index.js';
+import {
+    getPrisma,
+    isUserAdmin,
+    postMessage,
+    postEphemeral,
+    logInternal,
+} from '../../utils/index.js';
 
 async function unshushCommand({
-    payload: { user_id, text },
+    payload: { user_id, text, channel_id },
     ack,
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
     await ack();
@@ -10,10 +16,12 @@ async function unshushCommand({
     const commands = text.split(' ');
     const isAdmin = await isUserAdmin(user_id);
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
-    console.log(userToBan);
 
-    if (!isAdmin || !userToBan) {
-        return;
+    if (!isAdmin) {
+        return await postEphemeral(channel_id, user_id, 'Only admins can run this command.');
+    }
+    if (!userToBan) {
+        return await postEphemeral(channel_id, user_id, 'You need to specify a user to unshush.');
     }
 
     await logInternal(`<@${userToBan}> was unshushed`);
@@ -21,8 +29,6 @@ async function unshushCommand({
     await prisma.bans.deleteMany({
         where: { user: userToBan },
     });
-
-    console.log("I'm working");
 
     await postMessage(userToBan, `You were unshushed`);
 }

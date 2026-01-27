@@ -29,7 +29,7 @@ async function listenForChannelBannedUser({
                 user: userID,
             })
             .catch(() => {
-                console.log('kicking failed');
+                console.error(`Failed to kick user ${userID} from channel ${slackChannel}`);
             }),
         postEphemeral(
             channel,

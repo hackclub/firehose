@@ -1,5 +1,11 @@
 import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import { getPrisma, postMessage, postEphemeral, logInternal } from '../../utils/index.js';
+import {
+    getPrisma,
+    isUserAdmin,
+    postMessage,
+    postEphemeral,
+    logInternal,
+} from '../../utils/index.js';
 
 async function unbanCommand({
     payload: { user_id, text, channel_id },
@@ -7,6 +13,12 @@ async function unbanCommand({
 }: SlackCommandMiddlewareArgs & AllMiddlewareArgs) {
     await ack();
     const prisma = getPrisma();
+
+    const isAdmin = await isUserAdmin(user_id);
+    if (!isAdmin) {
+        return await postEphemeral(channel_id, user_id, 'Only admins can run this command.');
+    }
+
     const commands = text.split(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
     let channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];

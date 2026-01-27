@@ -16,6 +16,7 @@ import {
 async function slowmodeDisableButton({
     ack,
     body,
+    client,
 }: SlackActionMiddlewareArgs<BlockAction> & AllMiddlewareArgs) {
     const actions = body.actions as ButtonAction[];
     const prisma = getPrisma();
@@ -30,6 +31,23 @@ async function slowmodeDisableButton({
         if (!isAdmin) {
             await postEphemeral(channel, admin_id, 'You must be an admin');
             return;
+        }
+
+        if (body.view?.id) {
+            await client.views.update({
+                view_id: body.view.id,
+                view: {
+                    type: 'modal',
+                    title: { type: 'plain_text', text: 'Slowmode' },
+                    close: { type: 'plain_text', text: 'Close' },
+                    blocks: [
+                        {
+                            type: 'section',
+                            text: { type: 'mrkdwn', text: '✅ Slowmode has been disabled.' },
+                        },
+                    ],
+                },
+            });
         }
 
         const existingSlowmode = await prisma.slowmode.findUnique({
@@ -59,6 +77,13 @@ async function slowmodeDisableButton({
                 },
             });
 
+            await prisma.slowUsers.deleteMany({
+                where: {
+                    channel: channel,
+                    threadTs: threadTs || '',
+                },
+            });
+
             await logInternal(`<@${admin_id}> turned off Slowmode in <#${channel}>`);
             await postMessage(channel, 'Slowmode has been turned off in this channel.');
         }
@@ -70,6 +95,7 @@ async function slowmodeDisableButton({
 async function slowmodeThreadDisableButton({
     ack,
     body,
+    client,
 }: SlackActionMiddlewareArgs<BlockAction> & AllMiddlewareArgs) {
     const actions = body.actions as ButtonAction[];
     const prisma = getPrisma();
@@ -83,6 +109,23 @@ async function slowmodeThreadDisableButton({
         if (!isAdmin) {
             await postEphemeral(channel, body.user.id, 'You must be an admin', threadTs);
             return;
+        }
+
+        if (body.view?.id) {
+            await client.views.update({
+                view_id: body.view.id,
+                view: {
+                    type: 'modal',
+                    title: { type: 'plain_text', text: 'Slowmode' },
+                    close: { type: 'plain_text', text: 'Close' },
+                    blocks: [
+                        {
+                            type: 'section',
+                            text: { type: 'mrkdwn', text: '✅ Slowmode has been disabled.' },
+                        },
+                    ],
+                },
+            });
         }
 
         const existingSlowmode = await prisma.slowmode.findUnique({
@@ -114,6 +157,13 @@ async function slowmodeThreadDisableButton({
                     locked: false,
                     updatedAt: new Date(),
                     admin: body.user.id,
+                },
+            });
+
+            await prisma.slowUsers.deleteMany({
+                where: {
+                    channel: channel,
+                    threadTs,
                 },
             });
 
