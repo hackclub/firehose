@@ -19,6 +19,10 @@ features:
           type: message
           callback_id: slowmode_thread
           description: Enable slowmode on a thread
+        - name: Destroy thread
+          type: message
+          callback_id: destroy_thread
+          description: Permanently delete a thread
     slash_commands:
         - command: /channelban
           url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
@@ -93,6 +97,7 @@ oauth_config:
             - users:read.email
             - channels:join
             - incoming-webhook
+            - files:write
 settings:
     event_subscriptions:
         request_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events

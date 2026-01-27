@@ -24,7 +24,9 @@ async function purgeCommand({
         return;
     }
     if (amount < 1) {
-        await respond(`:x: You need to specify a valid number of messages to purge. (must be above 0)`);
+        await respond(
+            `:x: You need to specify a valid number of messages to purge. (must be above 0)`
+        );
         return;
     }
 

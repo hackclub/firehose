@@ -235,7 +235,7 @@ async function slowmodeThreadModal({ ack, body }: SlackViewMiddlewareArgs & AllM
             `A ${slowmodeTime} second Slowmode has been enabled in this thread ${expiryText}`,
             thread_ts
         ),
-         logInternal(
+        logInternal(
             `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in ${getThreadLink(channel_id, thread_ts)} for ${reasonText} ${expiryText}`
         ),
     ]);

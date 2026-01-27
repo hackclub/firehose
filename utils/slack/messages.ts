@@ -9,7 +9,11 @@ export async function deleteMessage(channel: string, ts: string): Promise<void> 
     });
 }
 
-export async function deleteMessages(channel: string, timestamps: string[], concurrency = 5): Promise<number> {
+export async function deleteMessages(
+    channel: string,
+    timestamps: string[],
+    concurrency = 3
+): Promise<number> {
     let successCount = 0;
     await runWithConcurrency(timestamps, concurrency, async (ts) => {
         try {

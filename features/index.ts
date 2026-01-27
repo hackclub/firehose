@@ -4,7 +4,8 @@ import * as channelBan from './channel_ban/index.js';
 import * as shush from './shush/index.js';
 import * as purge from './purge/index.js';
 import * as threadLock from './thread_lock/index.js';
+import * as threadDestroy from './thread_destroy/index.js';
 
-const features = [slowmode, readonly, channelBan, shush, purge, threadLock];
+export const features = [slowmode, readonly, channelBan, shush, purge, threadLock, threadDestroy];
 
-export { features, slowmode, readonly, channelBan, shush, purge, threadLock };
+export { slowmode, readonly, channelBan, shush, purge, threadLock, threadDestroy };
