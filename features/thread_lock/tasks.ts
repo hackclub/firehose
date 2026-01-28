@@ -1,4 +1,11 @@
-import { getPrisma, removeReaction, logBoth, getThreadLink } from '../../utils/index.js';
+import {
+    getPrisma,
+    removeReaction,
+    logBoth,
+    getThreadLink,
+    isUserAPIAvailable,
+    unlockThread,
+} from '../../utils/index.js';
 
 const prisma = getPrisma();
 
@@ -36,6 +43,14 @@ function startAutoUnlock() {
                         active: false,
                     },
                 }),
+                (async () => {
+                    if (isUserAPIAvailable && thread.channel) {
+                        try {
+                            // In case the thread is locked via Slack too, try to unlock it
+                            await unlockThread(thread.channel, thread.id);
+                        } catch {}
+                    }
+                })(),
             ]);
 
             await Promise.all([

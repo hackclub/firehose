@@ -12,7 +12,7 @@ export async function deleteMessage(channel: string, ts: string): Promise<void> 
 export async function deleteMessages(
     channel: string,
     timestamps: string[],
-    concurrency = 3
+    concurrency = 1 // we could increase this to go faster, but we don't want to hit rate limits
 ): Promise<number> {
     let successCount = 0;
     await runWithConcurrency(timestamps, concurrency, async (ts) => {
