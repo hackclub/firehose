@@ -18,7 +18,10 @@ export async function getChannelManagers(channel: string): Promise<string[]> {
     }
 
     const json = await userAPI('admin.roles.entity.listAssignments', { entity_id: channel });
-    const managers = json?.role_assignments?.[0]?.users || [];
+    const assignment = json?.role_assignments?.find(
+        (a: { role_id: string }) => a.role_id === 'Rl0A'
+    );
+    const managers = assignment?.users || [];
 
     channelManagersCache.set(channel, {
         managers,

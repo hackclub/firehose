@@ -53,8 +53,11 @@ async function whitelistCommand({
             ),
             logInternal(`<@${user_id}> added <@${userToAdd}> to the whitelist for <#${channel}>`),
         ]);
-    } catch (e) {
-        if (e instanceof PrismaClientKnownRequestError && e.code === 'P2025') {
+    } catch (e: unknown) {
+        if (
+            e instanceof PrismaClientKnownRequestError &&
+            (e as { code: string }).code === 'P2025'
+        ) {
             await postEphemeral(
                 channel_id,
                 user_id,

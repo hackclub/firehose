@@ -27,8 +27,7 @@ mock.module('../utils/slack/client.js', () => ({
     },
 }));
 
-const { default: listenForChannelBannedUser } =
-    await import('../features/channel_ban/listener.js');
+const { default: listenForChannelBannedUser } = await import('../features/channel_ban/listener.js');
 
 const prisma = getPrisma();
 
