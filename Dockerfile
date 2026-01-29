@@ -1,6 +1,6 @@
 FROM oven/bun:1-slim
 
-RUN apt-get update && apt-get install -y openssl curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssl curl wget && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
