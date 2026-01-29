@@ -19,7 +19,6 @@ async function channelBanCommand({
     const reason = commands.slice(2).join(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
     const channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
-    console.log(text, commands, userToBan, channel, reason);
 
     const errors: string[] = [];
     if (!isAdmin) errors.push('Only admins can run this command.');

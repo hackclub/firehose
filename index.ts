@@ -48,11 +48,13 @@ app.event('channel_left', async ({ event, client }) => {
     }
 });
 
-const messageListeners: ((
+type MessageListener = (
     args: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs
-) => Promise<void>)[] = features
-    .map((f) => ('messageListener' in f ? f.messageListener : undefined))
-    .filter((listener): listener is NonNullable<typeof listener> => listener !== undefined);
+) => Promise<void>;
+
+const messageListeners: MessageListener[] = features
+    .filter((f): f is typeof f & { messageListener: MessageListener } => 'messageListener' in f)
+    .map((f) => f.messageListener);
 
 app.event('message', async (args) => {
     const { body } = args;

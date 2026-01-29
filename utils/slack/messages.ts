@@ -1,4 +1,4 @@
-import { client, userClient } from '../../client.js';
+import { client, userClient } from './client.js';
 import { runWithConcurrency } from '../helpers.js';
 import type { ChatPostMessageResponse } from '@slack/web-api';
 

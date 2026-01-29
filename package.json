@@ -4,7 +4,10 @@
         "build": "tsc",
         "start": "prisma migrate deploy && prisma generate && node dist/index.js",
         "dev": "NODE_ENV=development bun --watch index.ts",
-        "fmt": "prettier --write '**/*.ts'"
+        "fmt": "prettier --write '**/*.ts'",
+        "test": "bun test",
+        "test:unit": "bun test tests/unit",
+        "test:integration": "bun test tests/integration.test.ts"
     },
     "dependencies": {
         "@prisma/adapter-pg": "^7.3.0",
@@ -16,6 +19,7 @@
         "slack-block-builder": "^2.8.0"
     },
     "devDependencies": {
+        "@types/bun": "^1.3.7",
         "@types/express": "^5.0.0",
         "@types/node": "^22.0.0",
         "@types/pg": "^8.16.0",

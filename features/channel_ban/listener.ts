@@ -1,6 +1,5 @@
 import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import { getPrisma, deleteMessage, postEphemeral } from '../../utils/index.js';
-import { userClient } from '../../client.js';
+import { getPrisma, deleteMessage, postEphemeral, userClient } from '../../utils/index.js';
 
 async function listenForChannelBannedUser({
     payload,

@@ -7,8 +7,8 @@ import {
     removeReaction,
     logBoth,
     getThreadLink,
+    client,
 } from '../../utils/index.js';
-import { client } from '../../client.js';
 
 const prisma = getPrisma();
 

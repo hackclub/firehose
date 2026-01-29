@@ -1,6 +1,12 @@
 import type { App } from '@slack/bolt';
-import { client } from '../../client.js';
-import { deleteMessages, getThreadLink, env, isUserAPIAvailable, hideThread } from '../../utils/index.js';
+import {
+    deleteMessages,
+    getThreadLink,
+    env,
+    isUserAPIAvailable,
+    hideThread,
+    client,
+} from '../../utils/index.js';
 
 function registerModal(app: App) {
     app.view('destroy_thread_modal', async ({ view, ack, body }) => {

@@ -1,5 +1,5 @@
 import { env } from './env.js';
-import { client } from '../client.js';
+import { client } from './slack/client.js';
 
 export async function logPublic(text: string, logConsole = true): Promise<void> {
     if (logConsole) {

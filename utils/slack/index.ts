@@ -1,3 +1,4 @@
+export * from './client.js';
 export * from './permissions.js';
 export * from './messages.js';
 export * from './moderation.js';

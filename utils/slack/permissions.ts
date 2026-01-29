@@ -1,4 +1,4 @@
-import { client } from '../../client.js';
+import { client } from './client.js';
 import { isUserAPIAvailable, userAPI } from './userAPI.js';
 
 const channelManagersCache = new Map<string, { managers: string[]; expiresAt: number }>();

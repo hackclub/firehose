@@ -1,5 +1,5 @@
 import { WebClient } from '@slack/web-api';
-import { env } from './utils/index.js';
+import { env } from '../env.js';
 
 const client = new WebClient(env.SLACK_BOT_TOKEN);
 const userClient = new WebClient(env.SLACK_USER_TOKEN);
