@@ -96,7 +96,6 @@ oauth_config:
             - users:read
             - users:read.email
             - channels:join
-            - incoming-webhook
             - files:write
 settings:
     event_subscriptions:
