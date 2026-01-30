@@ -82,3 +82,11 @@ model Log {
   channel   String?
   active    Boolean?
 }
+
+model BannedBot {
+  id        Int      @id @default(autoincrement())
+  appId     String   @unique
+  reason    String
+  admin     String
+  createdAt DateTime @default(now())
+}

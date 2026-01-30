@@ -67,11 +67,27 @@ features:
           description: count
           usage_hint: count
           should_escape: false
+        - command: /botban
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: Ban a bot from being installed
+          usage_hint: '[@bot or app_id] [reason]'
+          should_escape: true
+        - command: /botunban
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: Remove a bot from the ban list
+          usage_hint: '[@bot or app_id]'
+          should_escape: true
+        - command: /botbanlist
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: List all banned bots
+          should_escape: false
 oauth_config:
     scopes:
         user:
             - chat:write
             - channels:write
+            - admin.apps:read
+            - admin.apps:write
         bot:
             - app_mentions:read
             - channels:history
@@ -98,10 +114,12 @@ oauth_config:
             - channels:join
             - incoming-webhook
             - files:write
+            - team:read
 settings:
     event_subscriptions:
         request_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
         bot_events:
+            - app_installed
             - app_mention
             - channel_created
             - channel_left
