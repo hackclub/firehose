@@ -1,5 +1,5 @@
 import type { SlackViewMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import { getPrisma, postMessage, getThreadLink, logInternal } from '../../utils/index.js';
+import { getPrisma, postMessage, logInternal } from '../../utils/index.js';
 
 async function slowmodeModal({ ack, body }: SlackViewMiddlewareArgs & AllMiddlewareArgs) {
     const prisma = getPrisma();
@@ -116,10 +116,10 @@ async function slowmodeModal({ ack, body }: SlackViewMiddlewareArgs & AllMiddlew
     await Promise.all([
         postMessage(
             channel_id,
-            `A ${slowmodeTime} second Slowmode has been enabled in this channel${threadText} ${expiryText}`
+            `${slowmodeTime}-second slowmode is enabled in this channel ${expiryText}.`
         ),
         logInternal(
-            `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in <#${channel_id}>${threadText} for ${reasonText} ${expiryText}`
+            `<@${admin_id}> enabled ${slowmodeTime}-second slowmode in <#${channel_id}>${threadText} for ${reasonText} ${expiryText}.`
         ),
     ]);
 }
@@ -232,11 +232,11 @@ async function slowmodeThreadModal({ ack, body }: SlackViewMiddlewareArgs & AllM
     await Promise.all([
         postMessage(
             channel_id,
-            `A ${slowmodeTime} second Slowmode has been enabled in this thread ${expiryText}`,
+            `${slowmodeTime}-second slowmode is enabled in this channel ${expiryText}.`,
             thread_ts
         ),
         logInternal(
-            `<@${admin_id}> enabled a ${slowmodeTime} second Slowmode in ${getThreadLink(channel_id, thread_ts)} for ${reasonText} ${expiryText}`
+            `<@${admin_id}> enabled ${slowmodeTime}-second slowmode in <#${channel_id}> for ${reasonText} ${expiryText}.`
         ),
     ]);
 }

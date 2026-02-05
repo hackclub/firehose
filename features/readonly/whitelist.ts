@@ -49,9 +49,11 @@ async function whitelistCommand({
             postEphemeral(
                 channel_id,
                 user_id,
-                `<@${userToAdd}> has been added to the whitelist for <#${channel}>`
+                `Added <@${userToAdd}> to the read-only whitelist for <#${channel}>.`
             ),
-            logInternal(`<@${user_id}> added <@${userToAdd}> to the whitelist for <#${channel}>`),
+            logInternal(
+                `<@${user_id}> added <@${userToAdd}> to the read-only whitelist for <#${channel}>.`
+            ),
         ]);
     } catch (e: unknown) {
         if (

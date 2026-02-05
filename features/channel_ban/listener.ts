@@ -33,7 +33,7 @@ async function listenForChannelBannedUser({
         postEphemeral(
             channel,
             user,
-            `Your message has been deleted because you're banned from this channel because ${userData.reason}\n\nYour message was:\n${text}`
+            `Your message was deleted because you are banned from this channel for ${userData.reason}.${text ? `\n\nYour message was:\n${text}` : ''}`
         ),
     ]);
 }

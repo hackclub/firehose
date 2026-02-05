@@ -122,9 +122,7 @@ function registerShortcuts(app: App) {
 
             await Promise.all([
                 logBoth(
-                    `🔓 Thread unlocked in <#${channel.id}>
-Reason: Admin clicked unlock.
-Link: ${getThreadLink(channel.id, thread_ts)}`
+                    `<@${user.id}> unlocked a thread in <#${channel.id}>.\nLink: ${getThreadLink(channel.id, thread_ts)}`
                 ),
                 removeReaction(channel.id, 'lock', thread_ts),
             ]);
@@ -191,12 +189,9 @@ Link: ${getThreadLink(channel.id, thread_ts)}`
         ]);
 
         await Promise.all([
-            postMessage(channel.id, `🔒 Thread locked indefinitely.`, thread_ts),
+            postMessage(channel.id, `This thread is locked indefinitely.`, thread_ts),
             logBoth(
-                `🔒 Thread locked in <#${channel.id}> indefinitely
-Reason: (none)
-Admin: ${user.id}
-Link: ${getThreadLink(channel.id, thread_ts)}`
+                `<@${user.id}> locked a thread in <#${channel.id}> indefinitely.\nLink: ${getThreadLink(channel.id, thread_ts)}`
             ),
             removeReaction(channel.id, 'lock', thread_ts),
         ]);

@@ -195,7 +195,7 @@ async function slowmodeCommand({
                         type: 'button',
                         text: {
                             type: 'plain_text',
-                            text: 'Turn off Slowmode',
+                            text: 'Disable slowmode',
                         },
                         style: 'danger',
                         action_id: 'slowmode_disable_button',

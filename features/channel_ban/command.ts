@@ -43,13 +43,13 @@ async function channelBanCommand({
             postEphemeral(
                 channel_id,
                 user_id,
-                `<@${userToBan}> has been banned from <#${channel}> for ${reason}`
+                `Banned <@${userToBan}> from <#${channel}> for ${reason}.`
             ),
             postMessage(
                 userToBan,
-                `You've been banned from <#${channel}>. A Fire Dept (community moderator) will reach out to you shortly with the reason`
+                `You have been banned from <#${channel}>. A Fire Department member will reach out to you shortly with the reason.`
             ),
-            logInternal(`<@${user_id}> banned <@${userToBan}> from <#${channel}> for ${reason}`),
+            logInternal(`<@${user_id}> banned <@${userToBan}> from <#${channel}> for ${reason}.`),
         ]);
     } catch (e) {
         await postEphemeral(channel_id, user_id, `An error occured: ${e}`);

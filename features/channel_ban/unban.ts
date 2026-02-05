@@ -34,8 +34,8 @@ async function unbanCommand({
     });
 
     await Promise.all([
-        postMessage(userToBan, `You were unbanned from <#${channel}>`),
-        logInternal(`<@${userToBan}> was unbanned from <#${channel}>`),
+        postMessage(userToBan, `You have been unbanned from <#${channel}>.`),
+        logInternal(`<@${user_id}> unbanned <@${userToBan}> from <#${channel}>.`),
     ]);
 }
 

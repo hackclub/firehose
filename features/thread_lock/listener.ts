@@ -44,7 +44,7 @@ async function messageListener({
                 postEphemeral(
                     message.channel,
                     message.user,
-                    `Sorry, the thread is currently locked until ${thread.time.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST. For reference, your message was: \`${message.text}\``,
+                    `This thread is locked until ${thread.time.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST.${message.text ? `\n\nYour message was:\n${message.text}` : ''}`,
                     thread_ts
                 ),
             ]);
@@ -63,10 +63,7 @@ async function messageListener({
             ...(thread.channel
                 ? [
                       logBoth(
-                          `🔓 Thread unlocked in <#${message.channel}>
-Reason: Autounlock (triggered by message)
-Admin: System
-Link: ${getThreadLink(thread.channel, thread.id)}`
+                          `A thread in <#${message.channel}> was automatically unlocked.\nLink: ${getThreadLink(thread.channel, thread.id)}`
                       ),
                   ]
                 : []),

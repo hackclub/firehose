@@ -104,7 +104,7 @@ function registerModal(app: App) {
         // Upload backup log after everything is done
         await client.files.uploadV2({
             channel_id: env.MIRRORCHANNEL,
-            initial_comment: `🗑️ Thread destroyed in <#${channel_id}> by <@${body.user.id}>, ${totalMessages} messages${methodNote}
+            initial_comment: `<@${body.user.id}> destroyed a thread in <#${channel_id}> (${totalMessages} messages).${methodNote}
 Link: ${getThreadLink(channel_id, parentTs)}`,
             content: logContent,
             filename: `thread_destroy_${channel_id}_${parentTs}.txt`,

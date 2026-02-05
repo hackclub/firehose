@@ -43,8 +43,8 @@ async function readOnlyCommand({
                 },
             });
             await Promise.all([
-                logInternal(`<#${channel}> was made read-only by <@${user_id}>`),
-                postEphemeral(channel, user_id, `<#${channel}> has been made read only`),
+                logInternal(`<@${user_id}> made <#${channel}> read-only.`),
+                postEphemeral(channel, user_id, `<#${channel}> is now read-only.`),
             ]);
         } else {
             await prisma.channel.delete({
@@ -53,8 +53,8 @@ async function readOnlyCommand({
                 },
             });
             await Promise.all([
-                logInternal(`<#${channel}> was made no longer read-only by <@${user_id}>`),
-                postEphemeral(channel, user_id, `<#${channel}> is no longer read only`),
+                logInternal(`<@${user_id}> disabled read-only mode in <#${channel}>.`),
+                postEphemeral(channel, user_id, `<#${channel}> is no longer read-only.`),
             ]);
         }
     } catch (e) {

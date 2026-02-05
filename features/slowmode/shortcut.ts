@@ -165,7 +165,7 @@ async function slowmodeThreadShortcut({
                         type: 'button',
                         text: {
                             type: 'plain_text',
-                            text: 'Turn off Slowmode',
+                            text: 'Disable slowmode',
                         },
                         style: 'danger',
                         action_id: 'slowmode_thread_disable_button',

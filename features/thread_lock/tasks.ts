@@ -55,10 +55,7 @@ function startAutoUnlock() {
 
             await Promise.all([
                 logBoth(
-                    `🔓 Thread unlocked in <#${thread.channel}>
-Reason: Autounlock (triggered by cron job)
-Admin: System
-Link: ${getThreadLink(thread.channel, thread.id)}`
+                    `A thread in <#${thread.channel}> was automatically unlocked.\nLink: ${getThreadLink(thread.channel, thread.id)}`
                 ),
                 removeReaction(thread.channel, 'lock', thread.id),
             ]);

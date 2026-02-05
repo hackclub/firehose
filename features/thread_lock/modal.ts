@@ -95,14 +95,11 @@ function registerModal(app: App) {
         await Promise.all([
             postMessage(
                 channel_id,
-                `🔒 Thread locked. Reason: ${reason} (until: ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST)`,
+                `This thread is locked until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.`,
                 thread_id
             ),
             logBoth(
-                `🔒 Thread locked in <#${channel_id}>
-Reason: ${reason}
-Expires: ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} (EST)
-Link: ${getThreadLink(channel_id, thread_id)}`
+                `<@${body.user.id}> locked a thread in <#${channel_id}> until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.\nLink: ${getThreadLink(channel_id, thread_id)}`
             ),
             addReaction(channel_id, 'lock', thread_id),
         ]);

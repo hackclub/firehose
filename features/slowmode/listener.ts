@@ -5,6 +5,7 @@ import {
     deleteMessage,
     postEphemeral,
     logInternal,
+    getThreadLink,
 } from '../../utils/index.js';
 
 async function enforceSlowMode({
@@ -63,10 +64,10 @@ async function enforceSlowMode({
         ]);
 
         const locationText = slowmodeConfig.threadTs
-            ? `https://hackclub.slack.com/archives/${channel}/p${slowmodeConfig.threadTs.replace('.', '')}`
-            : `<#${channel}>`;
+            ? `a thread in <#${channel}>.\nLink: ${getThreadLink(channel, slowmodeConfig.threadTs)}`
+            : `<#${channel}>.`;
 
-        await logInternal(`Slowmode auto-disabled in ${locationText} (expired)`);
+        await logInternal(`Slowmode expired in ${locationText}`);
 
         return;
     }
@@ -109,7 +110,7 @@ async function enforceSlowMode({
         await postEphemeral(
             channel,
             user,
-            `Slowmode active: you can send another message in ${timeRemaining} seconds.\n\nYour message was:\n${text}`,
+            `Slowmode is active. You can send another message in ${timeRemaining} seconds.${text ? `\n\nYour message was:\n${text}` : ''}`,
             thread_ts
         );
     } else {

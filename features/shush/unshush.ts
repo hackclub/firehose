@@ -31,8 +31,8 @@ async function unshushCommand({
     });
 
     await Promise.all([
-        postMessage(userToBan, `You were unshushed`),
-        logInternal(`<@${userToBan}> was unshushed`),
+        postMessage(userToBan, `You have been unshushed.`),
+        logInternal(`<@${user_id}> unshushed <@${userToBan}>.`),
     ]);
 }
 

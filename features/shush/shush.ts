@@ -44,16 +44,14 @@ async function shushCommand({
     await Promise.all([
         postMessage(
             userToBan,
-            "You've been banned from talking in all Slack channels for a short period of time. A FD member will reach out to you shortly."
+            'You have been shushed in all Slack channels for a short period of time. A Fire Department member will reach out to you shortly.'
         ),
         postEphemeral(
             channel_id,
             user_id,
-            `<@${userToBan}> has been shushed from all channels for ${reason}`
+            `Shushed <@${userToBan}> in all Slack channels for ${reason}.`
         ),
-        logInternal(
-            `<@${user_id}> shushed <@${userToBan}> from all Slack channels. ${reason ? `for ${reason}` : ''}`
-        ),
+        logInternal(`<@${user_id}> shushed <@${userToBan}> in all Slack channels for ${reason}.`),
     ]);
 }
 

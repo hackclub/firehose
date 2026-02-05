@@ -9,7 +9,6 @@ import {
     isUserAdmin,
     postMessage,
     postEphemeral,
-    getThreadLink,
     logInternal,
 } from '../../utils/index.js';
 
@@ -84,8 +83,8 @@ async function slowmodeDisableButton({
                 },
             });
 
-            await logInternal(`<@${admin_id}> turned off Slowmode in <#${channel}>`);
-            await postMessage(channel, 'Slowmode has been turned off in this channel.');
+            await logInternal(`<@${admin_id}> disabled slowmode in <#${channel}>.`);
+            await postMessage(channel, 'Slowmode is disabled in this channel.');
         }
     } catch (e) {
         console.error(e);
@@ -167,11 +166,9 @@ async function slowmodeThreadDisableButton({
                 },
             });
 
-            await logInternal(
-                `<@${body.user.id}> turned off Slowmode in ${getThreadLink(channel, threadTs)}`
-            );
+            await logInternal(`<@${body.user.id}> disabled slowmode in a thread in <#${channel}>.`);
 
-            await postMessage(channel, 'Slowmode has been turned off in this thread.', threadTs);
+            await postMessage(channel, 'Slowmode is disabled in this thread.', threadTs);
         }
     } catch (e) {
         console.error(e);

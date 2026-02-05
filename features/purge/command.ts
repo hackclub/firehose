@@ -62,10 +62,10 @@ async function purgeCommand({
         client.chat.update({
             channel: channel_id,
             ts: purgeMessage.ts,
-            text: `:white_check_mark: Purged \`${deleted}/${messagesToDelete.length}\` messages${failed ? ` (${failed} failed)` : ''} in \`${elapsed}s\``,
+            text: `Purged \`${deleted}/${messagesToDelete.length}\` messages in \`${elapsed}s\`.`,
         }),
         logInternal(
-            `<@${user_id}> purged \`${deleted}/${messagesToDelete.length}\` messages${failed ? ` (${failed} failed)` : ''} in \`${elapsed}s\``
+            `<@${user_id}> purged \`${deleted}/${messagesToDelete.length}\` messages in <#${channel_id}> in \`${elapsed}s\`.`
         ),
     ]);
 }
