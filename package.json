@@ -3,8 +3,7 @@
     "scripts": {
         "start": "bunx prisma migrate deploy && bunx prisma generate && bun run index.ts",
         "dev": "NODE_ENV=development bun --watch index.ts",
-        "fmt": "prettier --write .",
-        "test": "bun test"
+        "fmt": "prettier --write ."
     },
     "dependencies": {
         "@prisma/adapter-pg": "^7.3.0",
