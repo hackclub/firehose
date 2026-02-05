@@ -6,8 +6,11 @@ import {
     postEphemeral,
     postMessage,
     removeReaction,
-    logBoth,
+    logInternal,
     getThreadLink,
+    env,
+    isUserAPIAvailable,
+    lockMessage,
 } from '../../utils/index.js';
 
 function registerShortcuts(app: App) {
@@ -121,7 +124,7 @@ function registerShortcuts(app: App) {
             });
 
             await Promise.all([
-                logBoth(
+                logInternal(
                     `<@${user.id}> unlocked a thread in <#${channel.id}>.\nLink: ${getThreadLink(channel.id, thread_ts)}`
                 ),
                 removeReaction(channel.id, 'lock', thread_ts),
@@ -188,13 +191,22 @@ function registerShortcuts(app: App) {
             }),
         ]);
 
-        await Promise.all([
+
+        const [publicLogResult] = await Promise.all([
+            client.chat.postMessage({
+                channel: env.SLACK_LOG_CHANNEL,
+                text: `A thread was locked in <#${channel.id}> indefinitely.\nLink: ${getThreadLink(channel.id, thread_ts)}`,
+            }),
+            logInternal(`<@${user.id}> locked a thread in <#${channel.id}> indefinitely.\nLink: ${getThreadLink(channel.id, thread_ts)}`),
             postMessage(channel.id, `This thread is locked indefinitely.`, thread_ts),
-            logBoth(
-                `<@${user.id}> locked a thread in <#${channel.id}> indefinitely.\nLink: ${getThreadLink(channel.id, thread_ts)}`
-            ),
             removeReaction(channel.id, 'lock', thread_ts),
         ]);
+
+        if (isUserAPIAvailable && publicLogResult?.ts) {
+            try {
+                await lockMessage(env.SLACK_LOG_CHANNEL, publicLogResult.ts);
+            } catch {}
+        }
     });
 }
 

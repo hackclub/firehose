@@ -1,10 +1,10 @@
 import {
     getPrisma,
     removeReaction,
-    logBoth,
     getThreadLink,
     isUserAPIAvailable,
     unlockThread,
+    logInternal,
 } from '../../utils/index.js';
 
 const prisma = getPrisma();
@@ -54,7 +54,7 @@ function startAutoUnlock() {
             ]);
 
             await Promise.all([
-                logBoth(
+                logInternal(
                     `A thread in <#${thread.channel}> was automatically unlocked.\nLink: ${getThreadLink(thread.channel, thread.id)}`
                 ),
                 removeReaction(thread.channel, 'lock', thread.id),

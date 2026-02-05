@@ -5,9 +5,9 @@ import {
     deleteMessage,
     postEphemeral,
     removeReaction,
-    logBoth,
     getThreadLink,
     client,
+    logInternal,
 } from '../../utils/index.js';
 
 const prisma = getPrisma();
@@ -62,7 +62,7 @@ async function messageListener({
         await Promise.all([
             ...(thread.channel
                 ? [
-                      logBoth(
+                      logInternal(
                           `A thread in <#${message.channel}> was automatically unlocked.\nLink: ${getThreadLink(thread.channel, thread.id)}`
                       ),
                   ]

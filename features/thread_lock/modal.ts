@@ -1,5 +1,15 @@
 import type { App } from '@slack/bolt';
-import { getPrisma, postMessage, addReaction, logBoth, getThreadLink } from '../../utils/index.js';
+import {
+    getPrisma,
+    postMessage,
+    addReaction,
+    logInternal,
+    getThreadLink,
+    client,
+    env,
+    isUserAPIAvailable,
+    lockMessage,
+} from '../../utils/index.js';
 
 function registerModal(app: App) {
     const prisma = getPrisma();
@@ -92,17 +102,25 @@ function registerModal(app: App) {
             }),
         ]);
 
-        await Promise.all([
+        const [publicLogResult] = await Promise.all([
+            client.chat.postMessage({
+                channel: env.SLACK_LOG_CHANNEL,
+                text: `A thread was locked in <#${channel_id}> until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.\nLink: ${getThreadLink(channel_id, thread_id)}`,
+            }),
+            logInternal(`<@${body.user.id}> locked a thread in <#${channel_id}> until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.\nLink: ${getThreadLink(channel_id, thread_id)}`),
             postMessage(
                 channel_id,
                 `This thread is locked until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.`,
                 thread_id
             ),
-            logBoth(
-                `<@${body.user.id}> locked a thread in <#${channel_id}> until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.\nLink: ${getThreadLink(channel_id, thread_id)}`
-            ),
             addReaction(channel_id, 'lock', thread_id),
         ]);
+
+        if (isUserAPIAvailable && publicLogResult?.ts) {
+            try {
+                await lockMessage(env.SLACK_LOG_CHANNEL, publicLogResult.ts);
+            } catch {}
+        }
     });
 }
 
