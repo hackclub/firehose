@@ -6,6 +6,7 @@ import {
     isUserAPIAvailable,
     hideThread,
     client,
+    logPublic,
 } from '../../utils/index.js';
 
 function registerModal(app: App) {
@@ -101,15 +102,19 @@ function registerModal(app: App) {
                   ? ' (user API failed, used manual deletion)'
                   : ' (user API unavailable, used manual deletion)';
 
+        const logMessage = `<@${body.user.id}> destroyed a thread in <#${channel_id}> (${totalMessages} messages).${methodNote}\nLink: ${getThreadLink(channel_id, parentTs)}`;
+
         // Upload backup log after everything is done
-        await client.files.uploadV2({
-            channel_id: env.MIRRORCHANNEL,
-            initial_comment: `<@${body.user.id}> destroyed a thread in <#${channel_id}> (${totalMessages} messages).${methodNote}
-Link: ${getThreadLink(channel_id, parentTs)}`,
-            content: logContent,
-            filename: `thread_destroy_${channel_id}_${parentTs}.txt`,
-            title: `Destroyed thread log (${totalMessages} messages)`,
-        });
+        await Promise.all([
+            logPublic(logMessage),
+            client.files.uploadV2({
+                channel_id: env.MIRRORCHANNEL,
+                initial_comment: logMessage,
+                content: logContent,
+                filename: `thread_destroy_${channel_id}_${parentTs}.txt`,
+                title: `Destroyed thread log (${totalMessages} messages)`,
+            }),
+        ]);
     });
 }
 

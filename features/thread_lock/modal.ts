@@ -102,12 +102,14 @@ function registerModal(app: App) {
             }),
         ]);
 
+        const logMessage = `<@${body.user.id}> locked a thread in <#${channel_id}> until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.\nLink: ${getThreadLink(channel_id, thread_id)}`;
+
         const [publicLogResult] = await Promise.all([
             client.chat.postMessage({
                 channel: env.SLACK_LOG_CHANNEL,
-                text: `A thread was locked in <#${channel_id}> until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.\nLink: ${getThreadLink(channel_id, thread_id)}`,
+                text: logMessage,
             }),
-            logInternal(`<@${body.user.id}> locked a thread in <#${channel_id}> until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.\nLink: ${getThreadLink(channel_id, thread_id)}`),
+            logInternal(logMessage),
             postMessage(
                 channel_id,
                 `This thread is locked until ${expires.toLocaleString('en-US', { timeZone: 'America/New_York', timeStyle: 'short', dateStyle: 'long' })} EST for ${reason}.`,

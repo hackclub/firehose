@@ -191,13 +191,14 @@ function registerShortcuts(app: App) {
             }),
         ]);
 
+        const logMessage = `<@${user.id}> locked a thread in <#${channel.id}> indefinitely.\nLink: ${getThreadLink(channel.id, thread_ts)}`;
 
         const [publicLogResult] = await Promise.all([
             client.chat.postMessage({
                 channel: env.SLACK_LOG_CHANNEL,
-                text: `A thread was locked in <#${channel.id}> indefinitely.\nLink: ${getThreadLink(channel.id, thread_ts)}`,
+                text: logMessage,
             }),
-            logInternal(`<@${user.id}> locked a thread in <#${channel.id}> indefinitely.\nLink: ${getThreadLink(channel.id, thread_ts)}`),
+            logInternal(logMessage),
             postMessage(channel.id, `This thread is locked indefinitely.`, thread_ts),
             removeReaction(channel.id, 'lock', thread_ts),
         ]);
