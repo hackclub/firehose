@@ -42,7 +42,7 @@ app.event('channel_left', async ({ event, client }) => {
 
         const user = event.actor_id;
         await client.conversations.join({ channel: channelID });
-        await logInternal(`<@${user}> removed Firehose from <#${channelID}>, rejoining!`);
+        await logInternal(`<@${user}> removed Firehose from <#${channelID}>, attempting to rejoin!`);
     } catch (e) {
         console.error(e);
     }
