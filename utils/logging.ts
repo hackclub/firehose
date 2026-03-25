@@ -33,3 +33,11 @@ export async function logBoth(text: string, logConsole = true): Promise<void> {
 export function getThreadLink(channel: string, ts: string): string {
     return `https://hackclub.slack.com/archives/${channel}/p${ts.toString().replace('.', '')}`;
 }
+
+export function getMessageLink(channel: string, ts: string, thread_ts?: string): string {
+    const baseLink = `https://hackclub.slack.com/archives/${channel}/p${ts.toString().replace('.', '')}`;
+    if (thread_ts && thread_ts !== ts) {
+        return `${baseLink}?thread_ts=${thread_ts}&cid=${channel}`;
+    }
+    return baseLink;
+}
