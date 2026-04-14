@@ -2,14 +2,10 @@ import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { logInternal, postEphemeral, getMessageLink } from '../../utils/index.js';
 import { getPrisma } from '../../utils/prismaConnector.js';
 
-function escapeRegExp(value: string): string {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 const bannedPatterns: Array<{ word: string; regex: RegExp }> = process.env.BANNED_WORDS
     ? process.env.BANNED_WORDS.split(',').map((w) => {
           const word = w.trim().toLowerCase();
-          const pattern = `(^|[^A-Za-z0-9])${escapeRegExp(word)}([^A-Za-z0-9]|$)`;
+          const pattern = `(^|[^A-Za-z0-9])${RegExp.escape(word)}([^A-Za-z0-9]|$)`;
           return { word, regex: new RegExp(pattern, 'i') };
       })
     : [];
