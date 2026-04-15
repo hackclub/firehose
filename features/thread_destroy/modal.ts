@@ -26,7 +26,7 @@ function registerModal(app: App) {
             user?: string;
             text?: string;
         }[] = [];
-        let deletionMethod: 'user_api' | 'manual' | 'user_api_failed' = 'manual';
+        let deletionMethod = 'manual' as 'user_api' | 'manual' | 'user_api_failed';
 
         // Grab all messages currently in the thread for backup
         let cursor: string | undefined;
@@ -46,15 +46,15 @@ function registerModal(app: App) {
             cursor = messagesResponse.response_metadata?.next_cursor;
         } while (cursor);
 
-        // Try hideThread via moderation API if available
-        if (isUserAPIAvailable) {
-            try {
-                await hideThread(channel_id, parentTs);
-                deletionMethod = 'user_api';
-            } catch {
-                deletionMethod = 'user_api_failed';
-            }
-        }
+        // // Try hideThread via moderation API if available
+        // if (isUserAPIAvailable) {
+        //     try {
+        //         await hideThread(channel_id, parentTs);
+        //         deletionMethod = 'user_api';
+        //     } catch {
+        //         deletionMethod = 'user_api_failed';
+        //     }
+        // }
 
         // Fall back to manual deletion if user API unavailable or failed
         if (deletionMethod !== 'user_api') {
