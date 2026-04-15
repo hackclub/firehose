@@ -95,14 +95,14 @@ function registerModal(app: App) {
             .sort((a, b) => parseFloat(a.ts || '0') - parseFloat(b.ts || '0'))
             .map((msg) => `${msg.user || '(unknown user)'}: ${msg.text || '(no text)'}`)
             .join('\n');
-        const methodNote =
-            deletionMethod === 'user_api'
-                ? ''
-                : deletionMethod === 'user_api_failed'
-                  ? ' (user API failed, used manual deletion)'
-                  : ' (user API unavailable, used manual deletion)';
+        // const methodNote =
+        //     deletionMethod === 'user_api'
+        //         ? ''
+        //         : deletionMethod === 'user_api_failed'
+        //           ? ' (user API failed, used manual deletion)'
+        //           : ' (user API unavailable, used manual deletion)';
 
-        const logMessage = `<@${body.user.id}> destroyed a thread in <#${channel_id}> (${totalMessages} messages).${methodNote}\nLink: ${getThreadLink(channel_id, parentTs)}`;
+        const logMessage = `<@${body.user.id}> destroyed a thread in <#${channel_id}> (${totalMessages} messages).\nLink: ${getThreadLink(channel_id, parentTs)}`;
 
         // Upload backup log after everything is done
         await Promise.all([
