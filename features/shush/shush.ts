@@ -19,7 +19,7 @@ async function shushCommand({
     const isAdmin = await isUserAdmin(user_id);
     const commands = text.split(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
-    const { expiresAt, remaining } = parseDuration(commands.slice(1));
+    const { expiresAt, remaining, error: durationError } = parseDuration(commands.slice(1));
     const reason = remaining.join(' ');
 
     if (!isAdmin) {
@@ -28,6 +28,7 @@ async function shushCommand({
     }
 
     const errors: string[] = [];
+    if (durationError) errors.push(durationError);
     if (!reason) errors.push('A reason is required.');
     if (!userToBan) errors.push('A user is required.');
 

@@ -1,12 +1,18 @@
 import * as chrono from 'chrono-node';
 
-export function parseDuration(args: string[]): { expiresAt: Date | null; remaining: string[] } {
+export function parseDuration(args: string[]): {
+    expiresAt: Date | null;
+    remaining: string[];
+    error?: string;
+} {
     const joined = args.join(' ');
-    const match = joined.match(/^<([^>]+)>\s*/);
+    const match = joined.match(/^&lt;([^&]+)&gt;\s*/);
     if (!match) return { expiresAt: null, remaining: args };
 
-    const parsed = chrono.parseDate(match[1]);
-    if (!parsed) return { expiresAt: null, remaining: args };
+    const input = match[1];
+    const parsed = chrono.parseDate(input) ?? chrono.parseDate(`in ${input}`);
+    if (!parsed)
+        return { expiresAt: null, remaining: args, error: `Could not parse duration: "${input}"` };
 
     const remaining = joined.slice(match[0].length).split(' ').filter(Boolean);
     return { expiresAt: parsed, remaining };

@@ -20,11 +20,12 @@ async function channelBanCommand({
     const commands = text.split(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
     const channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
-    const { expiresAt, remaining } = parseDuration(commands.slice(2));
+    const { expiresAt, remaining, error: durationError } = parseDuration(commands.slice(2));
     const reason = remaining.join(' ');
 
     const errors: string[] = [];
     if (!isAdmin) errors.push('Only admins can run this command.');
+    if (durationError) errors.push(durationError);
     if (!reason) errors.push('A reason is required.');
     if (!userToBan) errors.push('A user is required');
     if (!channel) errors.push('A channel is required');
