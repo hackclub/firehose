@@ -5,6 +5,8 @@ import {
     postMessage,
     postEphemeral,
     logInternal,
+    parseDuration,
+    formatExpiry,
 } from '../../utils/index.js';
 
 async function channelBanCommand({
@@ -16,9 +18,10 @@ async function channelBanCommand({
 
     const isAdmin = await isUserAdmin(user_id);
     const commands = text.split(' ');
-    const reason = commands.slice(2).join(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
     const channel = commands[1].match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
+    const { expiresAt, remaining } = parseDuration(commands.slice(2));
+    const reason = remaining.join(' ');
 
     const errors: string[] = [];
     if (!isAdmin) errors.push('Only admins can run this command.');
@@ -36,20 +39,25 @@ async function channelBanCommand({
                 reason: reason,
                 user: userToBan,
                 channel: channel,
+                expiresAt: expiresAt,
             },
         });
+
+        const durationText = expiresAt ? ` until ${formatExpiry(expiresAt)}` : '';
 
         await Promise.all([
             postEphemeral(
                 channel_id,
                 user_id,
-                `Banned <@${userToBan}> from <#${channel}> for ${reason}.`
+                `Banned <@${userToBan}> from <#${channel}>${durationText} for ${reason}.`
             ),
             postMessage(
                 userToBan,
                 `You have been banned from <#${channel}>. A Fire Department member will reach out to you shortly with the reason.`
             ),
-            logInternal(`<@${user_id}> banned <@${userToBan}> from <#${channel}> for ${reason}.`),
+            logInternal(
+                `<@${user_id}> banned <@${userToBan}> from <#${channel}>${durationText} for ${reason}.`
+            ),
         ]);
     } catch (e) {
         await postEphemeral(channel_id, user_id, `An error occured: ${e}`);

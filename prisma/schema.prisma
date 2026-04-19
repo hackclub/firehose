@@ -8,14 +8,12 @@ datasource db {
 }
 
 model User {
-  id                 Int       @id @default(autoincrement())
-  channel            String?
-  user               String?
-  reason             String?
-  admin              String?
-  time_nlp           String?
-  time_banned        DateTime?
-  number_of_messages String?
+  id        Int       @id @default(autoincrement())
+  channel   String?
+  user      String?
+  reason    String?
+  admin     String?
+  expiresAt DateTime?
 }
 
 model Channel {
@@ -25,11 +23,11 @@ model Channel {
 }
 
 model Bans {
-  id     Int       @id @default(autoincrement())
-  user   String?
-  reason String?
-  admin  String?
-  time   DateTime?
+  id        Int       @id @default(autoincrement())
+  user      String?
+  reason    String?
+  admin     String?
+  expiresAt DateTime?
 }
 
 model Slowmode {

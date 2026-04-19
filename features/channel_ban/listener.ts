@@ -1,5 +1,12 @@
 import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import { getPrisma, deleteMessage, postEphemeral, userClient } from '../../utils/index.js';
+import {
+    getPrisma,
+    deleteMessage,
+    postMessage,
+    postEphemeral,
+    logInternal,
+    userClient,
+} from '../../utils/index.js';
 
 async function listenForChannelBannedUser({
     payload,
@@ -19,6 +26,19 @@ async function listenForChannelBannedUser({
     });
 
     if (!userData) return;
+
+    if (userData.expiresAt && new Date() > userData.expiresAt) {
+        await prisma.user.deleteMany({
+            where: { user: userID, channel: slackChannel },
+        });
+        await Promise.all([
+            postMessage(userID, `You have been unbanned from <#${slackChannel}>.`),
+            logInternal(
+                `<@${userID}>'s ban from <#${slackChannel}> has expired. They have been automatically unbanned.`
+            ),
+        ]);
+        return;
+    }
 
     await Promise.all([
         deleteMessage(slackChannel, ts),

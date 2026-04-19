@@ -1,5 +1,12 @@
 import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import { getPrisma, deleteMessage, postEphemeral, userClient } from '../../utils/index.js';
+import {
+    getPrisma,
+    deleteMessage,
+    postMessage,
+    postEphemeral,
+    logInternal,
+    userClient,
+} from '../../utils/index.js';
 
 async function listenForBannedUser({
     payload,
@@ -15,6 +22,17 @@ async function listenForBannedUser({
         },
     });
     if (!userData) return;
+
+    if (userData.expiresAt && new Date() > userData.expiresAt) {
+        await prisma.bans.deleteMany({
+            where: { user },
+        });
+        await Promise.all([
+            postMessage(user, 'You have been unshushed.'),
+            logInternal(`<@${user}>'s shush has expired. They have been automatically unshushed.`),
+        ]);
+        return;
+    }
 
     await Promise.all([
         deleteMessage(channel, ts),

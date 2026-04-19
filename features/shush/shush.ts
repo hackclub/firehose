@@ -5,6 +5,8 @@ import {
     postMessage,
     postEphemeral,
     logInternal,
+    parseDuration,
+    formatExpiry,
 } from '../../utils/index.js';
 
 async function shushCommand({
@@ -17,7 +19,8 @@ async function shushCommand({
     const isAdmin = await isUserAdmin(user_id);
     const commands = text.split(' ');
     const userToBan = commands[0].match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
-    const reason = commands.slice(1).join(' ');
+    const { expiresAt, remaining } = parseDuration(commands.slice(1));
+    const reason = remaining.join(' ');
 
     if (!isAdmin) {
         await postEphemeral(channel_id, user_id, "You don't have permission to use this command.");
@@ -38,8 +41,11 @@ async function shushCommand({
             admin: user_id,
             reason: reason,
             user: userToBan,
+            expiresAt: expiresAt,
         },
     });
+
+    const durationText = expiresAt ? ` until ${formatExpiry(expiresAt)}` : '';
 
     await Promise.all([
         postMessage(
@@ -49,9 +55,11 @@ async function shushCommand({
         postEphemeral(
             channel_id,
             user_id,
-            `Shushed <@${userToBan}> in all Slack channels for ${reason}.`
+            `Shushed <@${userToBan}> in all Slack channels${durationText} for ${reason}.`
         ),
-        logInternal(`<@${user_id}> shushed <@${userToBan}> in all Slack channels for ${reason}.`),
+        logInternal(
+            `<@${user_id}> shushed <@${userToBan}> in all Slack channels${durationText} for ${reason}.`
+        ),
     ]);
 }
 
