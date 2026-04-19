@@ -1,14 +1,5 @@
 import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import {
-    getPrisma,
-    isUserAdmin,
-    deleteMessage,
-    postEphemeral,
-    removeReaction,
-    getThreadLink,
-    client,
-    logInternal,
-} from '../../utils/index.js';
+import { getPrisma, isUserAdmin, deleteMessage, postEphemeral, client } from '../../utils/index.js';
 
 const prisma = getPrisma();
 
@@ -49,26 +40,6 @@ async function messageListener({
                 ),
             ]);
         }
-    } else if (thread.active && thread.time < new Date()) {
-        await prisma.thread.update({
-            where: {
-                id: thread_ts,
-            },
-            data: {
-                active: false,
-            },
-        });
-
-        await Promise.all([
-            ...(thread.channel
-                ? [
-                      logInternal(
-                          `A thread in <#${message.channel}> was automatically unlocked.\nLink: ${getThreadLink(thread.channel, thread.id)}`
-                      ),
-                  ]
-                : []),
-            removeReaction(message.channel, 'lock', thread_ts),
-        ]);
     }
 }
 

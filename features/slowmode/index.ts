@@ -4,6 +4,7 @@ import shortcut from './shortcut.js';
 import listener from './listener.js';
 import { slowmodeModal, slowmodeThreadModal } from './modal.js';
 import { slowmodeDisableButton, slowmodeThreadDisableButton } from './actions.js';
+import startAutoExpire from './tasks.js';
 
 function register(app: App) {
     app.command(/\/(.*dev-)?slowmode$/, command);
@@ -12,6 +13,7 @@ function register(app: App) {
     app.action('slowmode_thread_disable_button', slowmodeThreadDisableButton);
     app.view('slowmode_modal', slowmodeModal);
     app.view('slowmode_thread_modal', slowmodeThreadModal);
+    startAutoExpire();
 }
 
 export { register, listener as messageListener };

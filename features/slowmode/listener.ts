@@ -1,12 +1,5 @@
 import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import {
-    getPrisma,
-    isUserExempt,
-    deleteMessage,
-    postEphemeral,
-    logInternal,
-    getThreadLink,
-} from '../../utils/index.js';
+import { getPrisma, isUserExempt, deleteMessage, postEphemeral } from '../../utils/index.js';
 
 async function enforceSlowMode({
     payload,
@@ -47,30 +40,6 @@ async function enforceSlowMode({
     }
 
     if (!slowmodeConfig) return;
-
-    if (slowmodeConfig.expiresAt && new Date() > slowmodeConfig.expiresAt) {
-        await Promise.all([
-            prisma.slowmode.update({
-                where: {
-                    id: slowmodeConfig.id,
-                },
-                data: {
-                    locked: false,
-                },
-            }),
-            prisma.slowUsers.deleteMany({
-                where: { channel: channel, threadTs: slowmodeConfig.threadTs },
-            }),
-        ]);
-
-        const locationText = slowmodeConfig.threadTs
-            ? `a thread in <#${channel}>.\nLink: ${getThreadLink(channel, slowmodeConfig.threadTs)}`
-            : `<#${channel}>.`;
-
-        await logInternal(`Slowmode expired in ${locationText}`);
-
-        return;
-    }
 
     const isExempt = await isUserExempt(user, channel, slowmodeConfig.whitelistedUsers || []);
     if (isExempt) return;
