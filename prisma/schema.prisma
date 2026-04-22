@@ -80,3 +80,14 @@ model Log {
   channel   String?
   active    Boolean?
 }
+
+model FlaggedMessage {
+  id          String    @id @unique @default(nanoid())
+  flaggedWord String
+  user        String
+  channel     String
+  messageText String
+  messageTs   String
+  threadTs    String?
+  createdAt   DateTime  @default(now())
+}
