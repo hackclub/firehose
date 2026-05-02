@@ -26,6 +26,15 @@ async function unshushCommand({
         return;
     }
 
+    const existingBans = await prisma.bans.findMany({
+        where: { user: userToBan },
+    });
+
+    if (existingBans.length === 0) {
+        await postEphemeral(channel_id, user_id, `<@${userToBan}> is not currently shushed.`);
+        return;
+    }
+
     await prisma.bans.deleteMany({
         where: { user: userToBan },
     });

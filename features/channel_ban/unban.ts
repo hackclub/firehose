@@ -29,6 +29,19 @@ async function unbanCommand({
         return;
     }
 
+    const existingBan = await prisma.user.findMany({
+        where: { user: userToBan, channel: channel },
+    });
+
+    if (existingBan.length === 0) {
+        await postEphemeral(
+            channel_id,
+            user_id,
+            `<@${userToBan}> is not currently banned from <#${channel}>.`
+        );
+        return;
+    }
+
     await prisma.user.deleteMany({
         where: { user: userToBan, channel: channel },
     });
