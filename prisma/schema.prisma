@@ -91,3 +91,9 @@ model FlaggedMessage {
   threadTs    String?
   createdAt   DateTime  @default(now())
 }
+
+model BotWhitelist {
+  channelId String   @id
+  enabled   Boolean  @default(false)
+  botIds    String[] @default([])
+}
