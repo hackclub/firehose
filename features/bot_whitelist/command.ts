@@ -11,7 +11,7 @@ import * as api from './api.js';
 
 /**
  * Handles the /bot-whitelist command.
- * It's used for managing the allowed bots in enabled channels
+ * Strictly operates on the current channel to keep moderation simple and scoped.
  */
 async function botWhitelistCommand({
     payload: { text, channel_id, user_id },
@@ -30,8 +30,9 @@ async function botWhitelistCommand({
                 '• `/bot-whitelist disable` - Stop protecting this channel\n' +
                 '• `/bot-whitelist add @bot` - Allow a bot here\n' +
                 '• `/bot-whitelist remove @bot` - Remove bot from safe list'
-        );
-    }
+            );
+            }
+
 
     const action = args[0].toLowerCase();
     
@@ -69,7 +70,7 @@ async function botWhitelistCommand({
                 if (!config) {
                     await postEphemeral(channel_id, user_id, `No configuration found for <#${channel_id}>.`);
                 } else {
-                    const statusEmoji = config.enabled ? '✅ Enabled' : '🚫 Disabled';
+                    const channelStatus = config.enabled ? 'Enabled' : 'Disabled';
                     const botList = config.botIds.length > 0 
                         ? config.botIds.map(id => `<@${id}>`).join(', ') 
                         : '_None_';
@@ -77,8 +78,8 @@ async function botWhitelistCommand({
                     await postEphemeral(
                         channel_id, 
                         user_id, 
-                        ` *Whitelist Status for <#${channel_id}>*\n` +
-                        `• *Protection:* ${statusEmoji}\n` +
+                        `*Whitelist Status for <#${channel_id}>*\n` +
+                        `• *Protection:* ${channelStatus}\n` +
                         `• *Whitelisted Bots:* ${botList}`
                     );
                 }
@@ -105,49 +106,47 @@ async function botWhitelistCommand({
             case 'add':
                 if (botId) {
                     await api.addBotToWhitelist(channel_id, botId);
-                    await postEphemeral(channel_id, user_id, `Safe list updated: <@${botId}> is now allowed in <#${channel_id}>.`);
-                    await logInternal(`<@${user_id}> added bot <@${botId}> to whitelist for <#${channel_id}>.`);
+                    await postEphemeral(channel_id, user_id, `Safe list updated: *${botId}* is now allowed in <#${channel_id}>.`);
+                    await logInternal(`<@${user_id}> added bot *${botId}* to whitelist for <#${channel_id}>.`);
                 }
                 break;
-case 'remove':
-    if (botId) {
-        const config = await api.getWhitelistConfig(channel_id);
-        await api.removeBotFromWhitelist(channel_id, botId);
 
-        if (config?.enabled) {
-            try {
-                const members = await client.conversations.members({ channel: channel_id });
-                const lowerBotId = botId.toLowerCase();
+            case 'remove':
+                if (botId) {
+                    const config = await api.getWhitelistConfig(channel_id);
+                    await api.removeBotFromWhitelist(channel_id, botId);
+                    
+                    if (config?.enabled) {
+                        try {
+                            const members = await client.conversations.members({ channel: channel_id });
+                            const lowerBotId = botId.toLowerCase();
 
-                for (const memberId of members.members || []) {
-                    try {
-                        const info = await client.users.info({ user: memberId });
-                        if (info.user?.is_bot) {
-                            if (memberId.toLowerCase() === lowerBotId || 
-                                info.user.name?.toLowerCase() === lowerBotId || 
-                                info.user.real_name?.toLowerCase() === lowerBotId) {
-
-                                await userClient.conversations.kick({ channel: channel_id, user: memberId });
-                                await logInternal(`Kicked bot *${info.user.real_name || memberId}* from <#${channel_id}> after removal from whitelist.`);
-                                break;
+                            for (const memberId of members.members || []) {
+                                try {
+                                    const info = await client.users.info({ user: memberId });
+                                    if (info.user?.is_bot) {
+                                        if (memberId.toLowerCase() === lowerBotId || 
+                                            info.user.name?.toLowerCase() === lowerBotId || 
+                                            info.user.real_name?.toLowerCase() === lowerBotId) {
+                                            
+                                            await userClient.conversations.kick({ channel: channel_id, user: memberId });
+                                            await logInternal(`*Bot Protection:* Kicked bot *${info.user.real_name || memberId}* from <#${channel_id}> after removal from whitelist.`);
+                                            break;
+                                        }
+                                    }
+                                } catch (memberError) {
+                                    console.error(`Error processing member ${memberId}:`, memberError);
+                                }
                             }
+                        } catch (e) {
+                            console.error(`Detailed kick failure for ${botId}:`, e);
                         }
-                    } catch (memberError) {
-                        console.error(`Error processing member ${memberId}:`, memberError);
                     }
+                    
+                    await postEphemeral(channel_id, user_id, `Removed *${botId}* from the whitelist for <#${channel_id}>.`);
+                    await logInternal(`<@${user_id}> removed bot *${botId}* from whitelist for <#${channel_id}>.`);
                 }
-                } catch (e) {
-                console.error(`Detailed kick failure for ${botId}:`, e);
-                await postEphemeral(channel_id, user_id, `Could not kick bot *${botId}*. They were removed from the whitelist, but the kick failed. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
-                }
-
-        }
-
-        await postEphemeral(channel_id, user_id, `Removed *${botId}* from the whitelist for <#${channel_id}>.`);
-        await logInternal(`<@${user_id}> removed bot *${botId}* from whitelist for <#${channel_id}>.`);
-    }
-    break;
-
+                break;
 
             default:
                 await postEphemeral(channel_id, user_id, `Unknown action: *${action}*. Use: status, enable, disable, add, remove.`);
