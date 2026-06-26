@@ -9,6 +9,15 @@ import {
 } from '../../utils/index.js';
 import * as api from './api.js';
 
+let selfId: string | undefined;
+async function getSelfId() {
+    if (!selfId) {
+        const auth = await client.auth.test();
+        selfId = auth.user_id;
+    }
+    return selfId;
+}
+
 /**
  * Handles the /bot-whitelist command.
  * Strictly operates on the current channel to keep moderation simple and scoped.
@@ -56,10 +65,7 @@ async function botWhitelistCommand({
         return await postEphemeral(channel_id, user_id, 'Only admins or channel managers can run this command.');
     }
 
-    const auth = await client.auth.test();
-    const selfId = auth.user_id;
-
-    if (botId && (botId === selfId || botId.toLowerCase() === 'firehose')) {
+    if (botId && (botId === await getSelfId() || botId.toLowerCase() === 'firehose')) {
         return await postEphemeral(channel_id, user_id, 'Firehose is already exempt from bot protection and cannot be added or removed from the whitelist.');
     }
 

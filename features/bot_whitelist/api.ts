@@ -18,9 +18,10 @@ export async function enableWhitelist(channelId: string) {
 
 export async function disableWhitelist(channelId: string) {
     const prisma = getPrisma();
-    return await prisma.botWhitelist.update({
+    return await prisma.botWhitelist.upsert({
         where: { channelId },
-        data: { enabled: false },
+        update: { enabled: false },
+        create: { channelId, enabled: false },
     });
 }
 
