@@ -20,4 +20,4 @@ export const features = [
     botWhitelist,
 ];
 
-export { slowmode, readonly, channelBan, shush, purge, threadLock, threadDestroy };
+export { slowmode, readonly, channelBan, shush, purge, threadLock, threadDestroy, botWhitelist };

@@ -1,80 +1,94 @@
 import { App, SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { receiver, startExpressServer } from './endpoints/index.js';
-import { features } from './features/index.js';
+import { features, botWhitelist } from './features/index.js';
 import { env, logInternal } from './utils/index.js';
 
 const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
 
 const app = new App({
-    token: env.SLACK_BOT_TOKEN,
-    signingSecret: env.SLACK_SIGNING_SECRET,
-    receiver: isDevMode ? undefined : receiver,
-    socketMode: isDevMode,
-    appToken: env.SLACK_APP_TOKEN,
-    port: Number(env.PORT) || 3000,
+  token: env.SLACK_BOT_TOKEN,
+  signingSecret: env.SLACK_SIGNING_SECRET,
+  receiver: isDevMode ? undefined : receiver,
+  socketMode: isDevMode,
+  appToken: env.SLACK_APP_TOKEN,
+  port: Number(env.PORT) || 3000,
 });
 
 for (const feature of features) {
-    if (feature.register) {
-        feature.register(app, receiver.router);
-    }
+  if (feature.register) {
+    feature.register(app, receiver.router);
+  }
 }
 
 app.event('channel_created', async ({ event, client }) => {
-    if (isDevMode) return;
+  if (isDevMode) return;
 
-    try {
-        const channelId = event.channel.id;
-        await client.conversations.join({ channel: channelId });
-    } catch (e) {
-        console.error(e);
-    }
+  try {
+    const channelId = event.channel.id;
+    await client.conversations.join({ channel: channelId });
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 app.event('channel_left', async ({ event, client }) => {
-    if (isDevMode) return;
+  if (isDevMode) return;
 
-    try {
-        const channelID = event.channel;
-        const channelInfo = await client.conversations.info({ channel: channelID });
-        if (channelInfo.channel?.is_archived) return;
+  try {
+    const channelID = event.channel;
+    const channelInfo = await client.conversations.info({ channel: channelID });
+    if (channelInfo.channel?.is_archived) return;
 
-        const user = event.actor_id;
-        await client.conversations.join({ channel: channelID });
-        await logInternal(
-            `<@${user}> removed Firehose from <#${channelID}>, attempting to rejoin!`
-        );
-    } catch (e) {
-        console.error(e);
-    }
+    const user = event.actor_id;
+    await client.conversations.join({ channel: channelID });
+    await logInternal(
+      `<@${user}> removed Firehose from <#${channelID}>, attempting to rejoin!`
+    );
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 type MessageListener = (
-    args: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs
+  args: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs
 ) => Promise<void>;
 
 const messageListeners: MessageListener[] = features
-    .filter((f): f is typeof f & { messageListener: MessageListener } => 'messageListener' in f)
-    .map((f) => f.messageListener);
+  .filter((f): f is typeof f & { messageListener: MessageListener } => (
+    'messageListener' in f && (f as any).messageListener !== botWhitelist.messageListener
+  ))
+  .map((f) => f.messageListener);
+
+// bot messages often have no `user` field, so the handler below would drop them.
+app.event('message', async (args) => {
+  const { body } = args;
+  const { event } = body;
+  if (!event || !event.type || event.type !== 'message') return;
+  const { channel } = event;
+
+  if (isDevMode && channel !== devChannel) return;
+
+  await botWhitelist.messageListener(args);
+});
 
 app.event('message', async (args) => {
-    const { body } = args;
-    const { event } = body;
-    if (!event || !event.type || event.type !== 'message' || !('user' in event)) return;
-    const { channel } = event;
+  const { body } = args;
+  const { event } = body;
+  if (!event || !event.type || event.type !== 'message' || !('user' in event)) return;
+  const { channel } = event;
 
-    if (isDevMode && channel !== devChannel) return;
+  if (isDevMode && channel !== devChannel) return;
 
-    await Promise.all(messageListeners.map((listener) => listener(args)));
+  await Promise.all(messageListeners.map((listener) => listener(args)));
 });
 
 const port = env.PORT || 3000;
 
 if (isDevMode) {
-    startExpressServer();
+  startExpressServer();
 }
 
 app.start(port).then(() => {
-    app.logger.info(`Bolt is running on port ${port}`);
+  app.logger.info(`Bolt is running on port ${port}`);
 });
