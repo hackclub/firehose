@@ -25,15 +25,7 @@ async function onMemberJoined({
 
         if (isSelf) return;
 
-        const username = userInfo.user?.name?.toLowerCase();
-        const realName = userInfo.user?.real_name?.toLowerCase();
-
-        const isWhitelisted = config.botIds.some(id => {
-            const lowerId = id.toLowerCase();
-            return lowerId === user.toLowerCase() || 
-                   lowerId === username || 
-                   lowerId === realName;
-        });
+        const isWhitelisted = config.botIds.includes(user);
 
         if (isBot && !isWhitelisted) {
             await userClient.conversations.kick({
@@ -81,17 +73,7 @@ async function messageListener({
 
         if (identifier === authInfo.user_id || botId === authInfo.bot_id) return;
 
-        const username = userInfo?.user?.name?.toLowerCase();
-        const realName = userInfo?.user?.real_name?.toLowerCase();
-
-        const isWhitelisted = config.botIds.some((id) => {
-            const lowerId = id.toLowerCase();
-            return (
-                lowerId === identifier.toLowerCase() ||
-                lowerId === username ||
-                lowerId === realName
-            );
-        });
+        const isWhitelisted = config.botIds.includes(userId ?? '') || config.botIds.includes(botId ?? '');
 
         if (!isWhitelisted) {
             const messageLink = getMessageLink(channel, ts);

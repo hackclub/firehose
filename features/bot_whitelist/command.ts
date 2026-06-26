@@ -118,28 +118,10 @@ async function botWhitelistCommand({
                     
                     if (config?.enabled) {
                         try {
-                            const members = await client.conversations.members({ channel: channel_id });
-                            const lowerBotId = botId.toLowerCase();
-
-                            for (const memberId of members.members || []) {
-                                try {
-                                    const info = await client.users.info({ user: memberId });
-                                    if (info.user?.is_bot) {
-                                        if (memberId.toLowerCase() === lowerBotId || 
-                                            info.user.name?.toLowerCase() === lowerBotId || 
-                                            info.user.real_name?.toLowerCase() === lowerBotId) {
-                                            
-                                            await userClient.conversations.kick({ channel: channel_id, user: memberId });
-                                            await logInternal(`*Bot Protection:* Kicked bot *${info.user.real_name || memberId}* from <#${channel_id}> after removal from whitelist.`);
-                                            break;
-                                        }
-                                    }
-                                } catch (memberError) {
-                                    console.error(`Error processing member ${memberId}:`, memberError);
-                                }
-                            }
+                            await userClient.conversations.kick({ channel: channel_id, user: botId });
+                            await logInternal(`*Bot Protection:* Kicked bot *${botId}* from <#${channel_id}> after removal from whitelist.`);
                         } catch (e) {
-                            console.error(`Detailed kick failure for ${botId}:`, e);
+                            console.error(`Failed to kick ${botId} after whitelist removal:`, e);
                         }
                     }
                     
