@@ -66,8 +66,9 @@ async function messageListener({
 
         if (!identifier) return;
 
-        const [userInfo, authInfo] = await Promise.all([
-            client.users.info({ user: identifier }).catch(() => null),
+        const [userInfo, botInfo, authInfo] = await Promise.all([
+            userId ? client.users.info({ user: userId }).catch(() => null) : Promise.resolve(null),
+            botId ? client.bots.info({ bot: botId }).catch(() => null) : Promise.resolve(null),
             client.auth.test(),
         ]);
 
@@ -77,13 +78,14 @@ async function messageListener({
 
         if (!isWhitelisted) {
             const messageLink = getMessageLink(channel, ts);
-            const appId = userInfo?.user?.profile?.api_app_id || 'unknown';
-            const marketplaceLink = appId !== 'unknown' 
+            const appId = botInfo?.bot?.app_id || userInfo?.user?.profile?.api_app_id;
+            const displayName = userInfo?.user?.real_name || botInfo?.bot?.name || identifier;
+            const marketplaceLink = appId
                 ? `\n*Manage this bot:* https://hackclub.slack.com/marketplace/${appId}`
                 : '';
-            
+
             await logInternal(
-                `*Bot Protection:* Deleted top-level message from unauthorized bot *${userInfo?.user?.real_name || identifier}* in <#${channel}>.\n` +
+                `*Bot Protection:* Deleted top-level message from unauthorized bot *${displayName}* in <#${channel}>.\n` +
                 `*Original Message:* ${messageLink}${marketplaceLink}`
             );
 
