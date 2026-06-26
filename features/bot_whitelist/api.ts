@@ -38,7 +38,7 @@ export async function addBotToWhitelist(channelId: string, botId: string) {
     });
 }
 
-export async function removeBotFromWhitelist(channelId: string, botId: string) {
+export async function removeBotFromWhitelist(channelId: string, ...botIds: string[]) {
     const prisma = getPrisma();
     const config = await getWhitelistConfig(channelId);
     if (!config) return null;
@@ -46,7 +46,7 @@ export async function removeBotFromWhitelist(channelId: string, botId: string) {
     return await prisma.botWhitelist.update({
         where: { channelId },
         data: {
-            botIds: config.botIds.filter((id) => id !== botId),
+            botIds: config.botIds.filter((id) => !botIds.includes(id)),
         },
     });
 }

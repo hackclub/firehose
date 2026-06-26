@@ -74,7 +74,21 @@ async function messageListener({
 
         if (identifier === authInfo.user_id || botId === authInfo.bot_id) return;
 
-        const isWhitelisted = config.botIds.includes(userId ?? '') || config.botIds.includes(botId ?? '');
+        const botUserId = (botInfo as any)?.bot?.user_id as string | undefined;
+
+        console.log('[bot-whitelist] message check:', {
+            userId,
+            botId,
+            botUserId,
+            whitelist: config.botIds,
+        });
+
+        const isWhitelisted =
+            config.botIds.includes(userId ?? '') ||
+            config.botIds.includes(botId ?? '') ||
+            (botUserId ? config.botIds.includes(botUserId) : false);
+
+        console.log('[bot-whitelist] isWhitelisted:', isWhitelisted);
 
         if (!isWhitelisted) {
             const messageLink = getMessageLink(channel, ts);

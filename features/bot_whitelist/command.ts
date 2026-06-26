@@ -18,6 +18,26 @@ async function getSelfId() {
     return selfId;
 }
 
+// Returns the Slack user ID (U...) for a bot given a name or ID.
+async function resolveBotId(input: string): Promise<string | null> {
+    if (/^[UB][A-Z0-9]{6,}$/.test(input)) return input;
+    const name = input.toLowerCase();
+    let cursor: string | undefined;
+    do {
+        const result = await client.users.list({ limit: 200, cursor });
+        const match = result.members?.find(
+            (m) =>
+                m.is_bot &&
+                (m.name?.toLowerCase() === name ||
+                    m.profile?.display_name?.toLowerCase() === name ||
+                    m.real_name?.toLowerCase() === name),
+        );
+        if (match?.id) return match.id;
+        cursor = result.response_metadata?.next_cursor || undefined;
+    } while (cursor);
+    return null;
+}
+
 /**
  * Handles the /bot-whitelist command.
  * Strictly operates on the current channel to keep moderation simple and scoped.
@@ -109,32 +129,44 @@ async function botWhitelistCommand({
                 await logInternal(`<@${user_id}> disabled bot whitelisting for <#${channel_id}>.`);
                 break;
 
-            case 'add':
+            case 'add': {
                 if (botId) {
-                    await api.addBotToWhitelist(channel_id, botId);
-                    await postEphemeral(channel_id, user_id, `Safe list updated: *${botId}* is now allowed in <#${channel_id}>.`);
-                    await logInternal(`<@${user_id}> added bot *${botId}* to whitelist for <#${channel_id}>.`);
+                    const resolvedId = await resolveBotId(botId);
+                    if (!resolvedId) {
+                        await postEphemeral(channel_id, user_id, `Could not find a bot named *${botId}*.`);
+                        break;
+                    }
+                    await api.addBotToWhitelist(channel_id, resolvedId);
+                    await postEphemeral(channel_id, user_id, `Safe list updated: <@${resolvedId}> is now allowed in <#${channel_id}>.`);
+                    await logInternal(`<@${user_id}> added bot <@${resolvedId}> to whitelist for <#${channel_id}>.`);
                 }
                 break;
+            }
 
-            case 'remove':
+            case 'remove': {
                 if (botId) {
+                    const resolvedId = await resolveBotId(botId);
+                    if (!resolvedId) {
+                        await postEphemeral(channel_id, user_id, `Could not find a bot named *${botId}*.`);
+                        break;
+                    }
                     const config = await api.getWhitelistConfig(channel_id);
-                    await api.removeBotFromWhitelist(channel_id, botId);
-                    
+                    await api.removeBotFromWhitelist(channel_id, resolvedId, botId);
+
                     if (config?.enabled) {
                         try {
-                            await userClient.conversations.kick({ channel: channel_id, user: botId });
-                            await logInternal(`*Bot Protection:* Kicked bot *${botId}* from <#${channel_id}> after removal from whitelist.`);
+                            await userClient.conversations.kick({ channel: channel_id, user: resolvedId });
+                            await logInternal(`*Bot Protection:* Kicked bot <@${resolvedId}> from <#${channel_id}> after removal from whitelist.`);
                         } catch (e) {
-                            console.error(`Failed to kick ${botId} after whitelist removal:`, e);
+                            console.error(`Failed to kick ${resolvedId} after whitelist removal:`, e);
                         }
                     }
-                    
-                    await postEphemeral(channel_id, user_id, `Removed *${botId}* from the whitelist for <#${channel_id}>.`);
-                    await logInternal(`<@${user_id}> removed bot *${botId}* from whitelist for <#${channel_id}>.`);
+
+                    await postEphemeral(channel_id, user_id, `Removed <@${resolvedId}> from the whitelist for <#${channel_id}>.`);
+                    await logInternal(`<@${user_id}> removed bot <@${resolvedId}> from whitelist for <#${channel_id}>.`);
                 }
                 break;
+            }
 
             default:
                 await postEphemeral(channel_id, user_id, `Unknown action: *${action}*. Use: status, enable, disable, add, remove.`);
