@@ -87,6 +87,8 @@ async function joinAllChannels(client: App['client']) {
       try {
         await client.conversations.join({ channel: channel.id });
         joined++;
+        if (joined % 100 === 0) app.logger.info(`joinAllChannels: joined ${joined} so far...`);
+        await new Promise((r) => setTimeout(r, 1300));
       } catch {
         failed++;
       }
