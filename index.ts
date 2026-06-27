@@ -7,74 +7,110 @@ const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
 
 const app = new App({
-    token: env.SLACK_BOT_TOKEN,
-    signingSecret: env.SLACK_SIGNING_SECRET,
-    receiver: isDevMode ? undefined : receiver,
-    socketMode: isDevMode,
-    appToken: env.SLACK_APP_TOKEN,
-    port: Number(env.PORT) || 3000,
+  token: env.SLACK_BOT_TOKEN,
+  signingSecret: env.SLACK_SIGNING_SECRET,
+  receiver: isDevMode ? undefined : receiver,
+  socketMode: isDevMode,
+  appToken: env.SLACK_APP_TOKEN,
+  port: Number(env.PORT) || 3000,
 });
 
 for (const feature of features) {
-    if (feature.register) {
-        feature.register(app, receiver.router);
-    }
+  if (feature.register) {
+    feature.register(app, receiver.router);
+  }
 }
 
 app.event('channel_created', async ({ event, client }) => {
-    if (isDevMode) return;
+  if (isDevMode) return;
 
-    try {
-        const channelId = event.channel.id;
-        await client.conversations.join({ channel: channelId });
-    } catch (e) {
-        console.error(e);
-    }
+  try {
+    const channelId = event.channel.id;
+    await client.conversations.join({ channel: channelId });
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 app.event('channel_left', async ({ event, client }) => {
-    if (isDevMode) return;
+  if (isDevMode) return;
 
-    try {
-        const channelID = event.channel;
-        const channelInfo = await client.conversations.info({ channel: channelID });
-        if (channelInfo.channel?.is_archived) return;
+  try {
+    const channelID = event.channel;
+    const channelInfo = await client.conversations.info({ channel: channelID });
+    if (channelInfo.channel?.is_archived) return;
 
-        const user = event.actor_id;
-        await client.conversations.join({ channel: channelID });
-        await logInternal(
-            `<@${user}> removed Firehose from <#${channelID}>, attempting to rejoin!`
-        );
-    } catch (e) {
-        console.error(e);
-    }
+    const user = event.actor_id;
+    await client.conversations.join({ channel: channelID });
+    await logInternal(
+      `<@${user}> removed Firehose from <#${channelID}>, attempting to rejoin!`
+    );
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 type MessageListener = (
-    args: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs
+  args: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs
 ) => Promise<void>;
 
 const messageListeners: MessageListener[] = features
-    .filter((f): f is typeof f & { messageListener: MessageListener } => 'messageListener' in f)
-    .map((f) => f.messageListener);
+  .filter((f): f is typeof f & { messageListener: MessageListener } => 'messageListener' in f)
+  .map((f) => f.messageListener);
 
 app.event('message', async (args) => {
-    const { body } = args;
-    const { event } = body;
-    if (!event || !event.type || event.type !== 'message' || !('user' in event)) return;
-    const { channel } = event;
+  const { body } = args;
+  const { event } = body;
+  if (!event || !event.type || event.type !== 'message' || !('user' in event)) return;
+  const { channel } = event;
 
-    if (isDevMode && channel !== devChannel) return;
+  if (isDevMode && channel !== devChannel) return;
 
-    await Promise.all(messageListeners.map((listener) => listener(args)));
+  await Promise.all(messageListeners.map((listener) => listener(args)));
 });
+
+async function joinAllChannels(client: App['client']) {
+  let cursor: string | undefined;
+  let joined = 0;
+  let failed = 0;
+
+  do {
+    const result = await client.conversations.list({
+      exclude_archived: true,
+      types: 'public_channel',
+      limit: 200,
+      cursor,
+    });
+
+    for (const channel of result.channels ?? []) {
+      if (channel.is_member || !channel.id) continue;
+      try {
+        await client.conversations.join({ channel: channel.id });
+        joined++;
+      } catch {
+        failed++;
+      }
+    }
+
+    cursor = result.response_metadata?.next_cursor;
+  } while (cursor);
+
+  app.logger.info(`joinAllChannels: joined ${joined}, failed ${failed}`);
+}
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const port = env.PORT || 3000;
 
 if (isDevMode) {
-    startExpressServer();
+  startExpressServer();
 }
 
-app.start(port).then(() => {
-    app.logger.info(`Bolt is running on port ${port}`);
+app.start(port).then(async () => {
+  app.logger.info(`Bolt is running on port ${port}`);
+
+  if (!isDevMode) {
+    await joinAllChannels(app.client);
+    setInterval(() => joinAllChannels(app.client), ONE_DAY_MS);
+  }
 });
