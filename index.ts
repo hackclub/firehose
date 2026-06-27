@@ -1,7 +1,7 @@
 import { App, SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { receiver, startExpressServer } from './endpoints/index.js';
 import { features } from './features/index.js';
-import { env, logInternal } from './utils/index.js';
+import { env, logInternal, isUserInFirehouse, postEphemeral } from './utils/index.js';
 
 const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
@@ -67,6 +67,29 @@ app.event('message', async (args) => {
     if (isDevMode && channel !== devChannel) return;
 
     await Promise.all(messageListeners.map((listener) => listener(args)));
+});
+
+app.use(async (args) => {
+    if (isDevMode || !('ack' in args) || typeof args.ack !== 'function') {
+        await args.next();
+        return;
+    }
+
+    const body = args.body as {
+        user_id?: string;
+        user?: { id?: string };
+        channel_id?: string;
+        channel?: { id?: string };
+    };
+    const userId = body.user_id ?? body.user?.id;
+    if (!userId || (await isUserInFirehouse(userId))) {
+        await args.next();
+        return;
+    }
+
+    await args.ack();
+    const channel = body.channel_id ?? body.channel?.id ?? 'G01DBHPLK25';
+    await postEphemeral(channel, userId, 'Sorry, you need to be in the FD to use Firehose.');
 });
 
 const port = env.PORT || 3000;
