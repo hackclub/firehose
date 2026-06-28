@@ -1,7 +1,7 @@
 import { App, SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { receiver, startExpressServer } from './endpoints/index.js';
 import { features } from './features/index.js';
-import { env, logInternal } from './utils/index.js';
+import { env, logInternal, getPrisma } from './utils/index.js';
 
 const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
@@ -20,6 +20,15 @@ for (const feature of features) {
     feature.register(app, receiver.router);
   }
 }
+
+app.event('team_join', async ({ event }) => {
+  const prisma = getPrisma();
+  await prisma.memberJoinDate.upsert({
+    where: { userId: event.user.id },
+    update: {},
+    create: { userId: event.user.id, joinedAt: new Date() },
+  });
+});
 
 app.event('channel_created', async ({ event, client }) => {
   if (isDevMode) return;

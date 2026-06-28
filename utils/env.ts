@@ -22,6 +22,7 @@ export const env = {
     SLACK_LOG_CHANNEL: requireEnv('SLACK_LOG_CHANNEL'),
     PORT: process.env.PORT,
     API_KEY: process.env.API_KEY,
+    SUPERADMIN_IDS: process.env.SUPERADMIN_IDS || '',
     NODE_ENV: process.env.NODE_ENV,
     DEV_CHANNEL: process.env.DEV_CHANNEL,
 };

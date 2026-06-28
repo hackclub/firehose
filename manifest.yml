@@ -67,6 +67,11 @@ features:
           description: count
           usage_hint: count
           should_escape: false
+        - command: /newaccount
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: restrict a channel to accounts older than N days
+          usage_hint: '[channel] [days]'
+          should_escape: true
 oauth_config:
     scopes:
         user:
@@ -106,6 +111,7 @@ settings:
             - channel_left
             - message.channels
             - message.groups
+            - team_join
     interactivity:
         is_enabled: true
         request_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
