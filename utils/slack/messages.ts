@@ -26,6 +26,32 @@ export async function deleteMessages(
     return successCount;
 }
 
+export async function destroyThread(channel: string, threadTs: string): Promise<void> {
+    let toDelete: string[] = [];
+    let cursor: string | undefined;
+
+    do {
+        const res = await client.conversations.replies({ channel, ts: threadTs, limit: 999, cursor });
+        for (const msg of res.messages ?? []) {
+            if (msg.ts) toDelete.push(msg.ts);
+        }
+        cursor = res.response_metadata?.next_cursor;
+    } while (cursor);
+
+    while (toDelete.length > 0) {
+        const deleted = await deleteMessages(channel, toDelete);
+        if (deleted === 0) break;
+
+        try {
+            const res = await client.conversations.replies({ channel, ts: threadTs, limit: 999 });
+            toDelete = (res.messages ?? []).map((m) => m.ts).filter(Boolean) as string[];
+        } catch (e: any) {
+            if (e?.data?.error === 'thread_not_found') break;
+            throw e;
+        }
+    }
+}
+
 export async function postEphemeral(
     channel: string,
     user: string,

@@ -1,5 +1,5 @@
 import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
-import { getPrisma, isUserExempt, deleteMessage, postEphemeral } from '../../utils/index.js';
+import { getPrisma, isUserExempt, destroyThread, postEphemeral } from '../../utils/index.js';
 
 async function newaccountListener({
     payload,
@@ -26,7 +26,7 @@ async function newaccountListener({
     const daysRemaining = Math.ceil((minAgeMs - ageMs) / 86_400_000);
 
     await Promise.all([
-        deleteMessage(channel, ts),
+        destroyThread(channel, ts),
         postEphemeral(
             channel,
             user,
