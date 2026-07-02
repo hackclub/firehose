@@ -2,12 +2,29 @@ import { client, userClient } from './client.js';
 import { runWithConcurrency } from '../helpers.js';
 import type { ChatPostMessageResponse } from '@slack/web-api';
 
+let userClientId: string | undefined;
+async function getUserClientId(): Promise<string> {
+  if (!userClientId) {
+    const auth = await userClient.auth.test();
+    if (!auth.user_id) throw new Error('Could not resolve userClient identity');
+    userClientId = auth.user_id;
+  }
+  return userClientId;
+}
+
 export async function deleteMessage(channel: string, ts: string): Promise<void> {
   try {
     await userClient.chat.delete({ channel, ts });
   } catch (e: any) {
     if (e?.data?.error !== 'channel_not_found') throw e;
-    await client.chat.delete({ channel, ts });
+
+    const userId = await getUserClientId();
+    try {
+      await client.conversations.invite({ channel, users: userId });
+    } catch (inviteErr: any) {
+      if (inviteErr?.data?.error !== 'already_in_channel') throw inviteErr;
+    }
+    await userClient.chat.delete({ channel, ts });
   }
 }
 
