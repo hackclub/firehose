@@ -1,6 +1,6 @@
 import { App, SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { receiver, startExpressServer } from './endpoints/index.js';
-import { features } from './features/index.js';
+import { features, botWhitelist } from './features/index.js';
 import { env, logInternal, getPrisma } from './utils/index.js';
 
 const isDevMode = env.NODE_ENV === 'development';
@@ -64,8 +64,22 @@ type MessageListener = (
 ) => Promise<void>;
 
 const messageListeners: MessageListener[] = features
-  .filter((f): f is typeof f & { messageListener: MessageListener } => 'messageListener' in f)
+  .filter((f): f is typeof f & { messageListener: MessageListener } => (
+    'messageListener' in f && (f as any).messageListener !== botWhitelist.messageListener
+  ))
   .map((f) => f.messageListener);
+
+// bot messages often have no `user` field, so the handler below would drop them.
+app.event('message', async (args) => {
+  const { body } = args;
+  const { event } = body;
+  if (!event || !event.type || event.type !== 'message') return;
+  const { channel } = event;
+
+  if (isDevMode && channel !== devChannel) return;
+
+  await botWhitelist.messageListener(args);
+});
 
 app.event('message', async (args) => {
   const { body } = args;
