@@ -1,7 +1,7 @@
 import { App, SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { receiver, startExpressServer } from './endpoints/index.js';
 import { features, botWhitelist } from './features/index.js';
-import { env, logInternal } from './utils/index.js';
+import { env, logInternal, getPrisma } from './utils/index.js';
 
 const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
@@ -20,6 +20,15 @@ for (const feature of features) {
     feature.register(app, receiver.router);
   }
 }
+
+app.event('team_join', async ({ event }) => {
+  const prisma = getPrisma();
+  await prisma.memberJoinDate.upsert({
+    where: { userId: event.user.id },
+    update: {},
+    create: { userId: event.user.id, joinedAt: new Date() },
+  });
+});
 
 app.event('channel_created', async ({ event, client }) => {
   if (isDevMode) return;
@@ -83,12 +92,50 @@ app.event('message', async (args) => {
   await Promise.all(messageListeners.map((listener) => listener(args)));
 });
 
+async function joinAllChannels(client: App['client']) {
+  let cursor: string | undefined;
+  let joined = 0;
+  let failed = 0;
+
+  do {
+    const result = await client.conversations.list({
+      exclude_archived: true,
+      types: 'public_channel',
+      limit: 200,
+      cursor,
+    });
+
+    for (const channel of result.channels ?? []) {
+      if (channel.is_member || !channel.id) continue;
+      try {
+        await client.conversations.join({ channel: channel.id });
+        joined++;
+        if (joined % 100 === 0) app.logger.info(`joinAllChannels: joined ${joined} so far...`);
+        await new Promise((r) => setTimeout(r, 1300));
+      } catch {
+        failed++;
+      }
+    }
+
+    cursor = result.response_metadata?.next_cursor;
+  } while (cursor);
+
+  app.logger.info(`joinAllChannels: joined ${joined}, failed ${failed}`);
+}
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
 const port = env.PORT || 3000;
 
 if (isDevMode) {
   startExpressServer();
 }
 
-app.start(port).then(() => {
+app.start(port).then(async () => {
   app.logger.info(`Bolt is running on port ${port}`);
+
+  if (!isDevMode) {
+    await joinAllChannels(app.client);
+    setInterval(() => joinAllChannels(app.client), ONE_DAY_MS);
+  }
 });

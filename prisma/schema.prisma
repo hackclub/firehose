@@ -81,6 +81,19 @@ model Log {
   active    Boolean?
 }
 
+model AccountAgeGate {
+  channelId  String   @id
+  minAgeDays Int
+  setBy      String
+  createdAt  DateTime @default(now())
+}
+
+model MemberJoinDate {
+  userId       String    @id
+  joinedAt     DateTime?
+  messageCount Int       @default(0)
+}
+
 model FlaggedMessage {
   id          String    @id @unique @default(nanoid())
   flaggedWord String

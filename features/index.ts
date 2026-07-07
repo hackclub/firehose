@@ -7,6 +7,7 @@ import * as threadLock from './thread_lock/index.js';
 import * as threadDestroy from './thread_destroy/index.js';
 import * as messageMatch from './automod/index.js';
 import * as botWhitelist from './bot_whitelist/index.js';
+import * as newaccount from './newaccount/index.js';
 
 export const features = [
     slowmode,
@@ -18,6 +19,7 @@ export const features = [
     threadDestroy,
     messageMatch,
     botWhitelist,
+    newaccount,
 ];
 
 export { slowmode, readonly, channelBan, shush, purge, threadLock, threadDestroy, botWhitelist };

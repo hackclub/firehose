@@ -1,5 +1,6 @@
 import { client } from './client.js';
 import { isUserAPIAvailable, userAPI } from './userAPI.js';
+import { env } from '../env.js';
 
 const channelManagersCache = new Map<string, { managers: string[]; expiresAt: number }>();
 const CHANNEL_CACHE_TTL_MS = 60 * 1000;
@@ -42,6 +43,10 @@ export async function isUserAdmin(userId: string): Promise<boolean> {
 
     userInfoCache.set(userId, { isAdmin, expiresAt: Date.now() + USER_CACHE_TTL_MS });
     return isAdmin;
+}
+
+export function isUserOwner(userId: string): boolean {
+    return env.SUPERADMIN_IDS.split(',').map(id => id.trim()).filter(Boolean).includes(userId);
 }
 
 export async function isUserExempt(
