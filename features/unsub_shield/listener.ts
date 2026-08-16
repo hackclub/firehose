@@ -27,7 +27,7 @@ export default async function messageMatchListener({
         postEphemeral(
             payload.channel,
             payload.user,
-            "To unsubscribe from notifications in the future, you can use 'Turn off notifications for replies' instead.",
+            "_To unsubscribe from notifications in the future, you can use 'Turn off notifications for replies' instead. <https://unsub.hack.club|See how>_",
             thread_ts
         ),
     ])
