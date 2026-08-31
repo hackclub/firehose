@@ -113,6 +113,7 @@ settings:
             - message.channels
             - message.groups
             - team_join
+            - reaction_added
     interactivity:
         is_enabled: true
         request_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
