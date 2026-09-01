@@ -1,6 +1,8 @@
 import type { AllMiddlewareArgs, SlackEventMiddlewareArgs } from '@slack/bolt';
+import { env } from '../../utils/index.js';
 
-const COMMUNITY_LOGS_CHANNEL = 'C085UEFDW6R';
+const COMMUNITY_LOGS_CHANNEL =
+	env.NODE_ENV === 'development' ? env.DEV_CHANNEL : 'C085UEFDW6R';
 const EMOJIS = new Set([
 	'fd-reason',
 	'reason-fd',
@@ -19,10 +21,7 @@ export default async function listener({
 	if (!EMOJIS.has(event.reaction)) return;
 	const userInfo = await client.users.info({ user: event.user });
 	const user = userInfo.user;
-	if (!user || user.is_bot || user.is_app_user) return;
-	const dm = await client.conversations.open({ users: event.user });
-	const dmChannel = dm.channel?.id;
-	if (!dmChannel) return;
+	if (!user || user.is_bot) return;
 	const RESPONSE = `Hi <@${event.user}>, we saw that you were asking for the reason behind a conduct action.
 
 Here are some real cases we've dealt with in the past:
@@ -34,7 +33,7 @@ In some cases, giving information wouldn't cause problems. But! Then any time we
 
 We understand that it's hard to trust what you can't see. But giving too much information about ban reasons can and does hurt Hack Clubbers.`;
 	await client.chat.postMessage({
-		channel: dmChannel,
+		channel: event.user,
 		text: RESPONSE,
 	});
 }
