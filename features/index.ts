@@ -8,6 +8,7 @@ import * as threadDestroy from './thread_destroy/index.js';
 import * as messageMatch from './automod/index.js';
 import * as botWhitelist from './bot_whitelist/index.js';
 import * as newaccount from './newaccount/index.js';
+import * as autoresponse from './autoresponse/index.js';
 import * as unsubShield from './unsub_shield/index.js';
 
 export const features = [
@@ -21,6 +22,7 @@ export const features = [
     messageMatch,
     botWhitelist,
     newaccount,
+    autoresponse,
     unsubShield,
 ];
 
