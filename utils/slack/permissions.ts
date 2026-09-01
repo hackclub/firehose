@@ -8,6 +8,11 @@ const CHANNEL_CACHE_TTL_MS = 60 * 1000;
 const userInfoCache = new Map<string, { isAdmin: boolean; expiresAt: number }>();
 const USER_CACHE_TTL_MS = 60 * 1000;
 
+let firehouseMembersCache: { members: Set<string>; expiresAt: number } | null = null;
+const FIREHOUSE_CACHE_TTL_MS = 60 * 1000;
+
+const FIREHOUSE = 'G01DBHPLK25';
+
 export async function getChannelManagers(channel: string): Promise<string[]> {
     const cached = channelManagersCache.get(channel);
     if (cached && cached.expiresAt > Date.now()) {
@@ -43,6 +48,34 @@ export async function isUserAdmin(userId: string): Promise<boolean> {
 
     userInfoCache.set(userId, { isAdmin, expiresAt: Date.now() + USER_CACHE_TTL_MS });
     return isAdmin;
+}
+
+export async function isUserInFirehouse(userId: string): Promise<boolean> {
+    if (firehouseMembersCache && firehouseMembersCache.expiresAt > Date.now()) {
+        return firehouseMembersCache.members.has(userId);
+    }
+
+    const members = new Set<string>();
+    let cursor: string | undefined;
+
+    do {
+        const result = await client.conversations.members({
+            channel: FIREHOUSE,
+            limit: 200,
+            cursor,
+        });
+        for (const member of result.members ?? []) {
+            members.add(member);
+        }
+        cursor = result.response_metadata?.next_cursor;
+    } while (cursor);
+
+    firehouseMembersCache = {
+        members,
+        expiresAt: Date.now() + FIREHOUSE_CACHE_TTL_MS,
+    };
+
+    return members.has(userId);
 }
 
 export function isUserOwner(userId: string): boolean {

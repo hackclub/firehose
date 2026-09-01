@@ -1,7 +1,14 @@
 import { App, SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { receiver, startExpressServer } from './endpoints/index.js';
 import { features, botWhitelist } from './features/index.js';
-import { env, logInternal, getPrisma } from './utils/index.js';
+import {
+    env,
+    logInternal,
+    getPrisma,
+    isUserInFirehouse,
+    postEphemeral,
+    postMessage,
+} from './utils/index.js';
 
 const isDevMode = env.NODE_ENV === 'development';
 const devChannel = env.DEV_CHANNEL;
@@ -90,6 +97,51 @@ app.event('message', async (args) => {
   if (isDevMode && channel !== devChannel) return;
 
   await Promise.all(messageListeners.map((listener) => listener(args)));
+});
+
+app.use(async (args) => {
+    if (isDevMode || !('ack' in args) || typeof args.ack !== 'function') {
+        await args.next();
+        return;
+    }
+
+    const body = args.body as {
+        user_id?: string;
+        user?: { id?: string };
+        channel_id?: string;
+        channel?: { id?: string };
+    };
+    const userId = body.user_id ?? body.user?.id;
+    if (!userId) {
+        await args.next();
+        return;
+    }
+
+    let allowed = false;
+    try {
+        allowed = await isUserInFirehouse(userId);
+    } catch (e) {
+        console.error('[fd-gate] membership lookup failed:', e);
+    }
+
+    if (allowed) {
+        await args.next();
+        return;
+    }
+
+    await args.ack();
+
+    const message = 'Sorry, you need to be in the FD to use Firehose.';
+    const channel = body.channel_id ?? body.channel?.id;
+    try {
+        if (channel) {
+            await postEphemeral(channel, userId, message);
+        } else {
+            await postMessage(userId, message);
+        }
+    } catch (e) {
+        console.error('[fd-gate] could not notify user:', e);
+    }
 });
 
 async function joinAllChannels(client: App['client']) {
