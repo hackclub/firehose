@@ -8,6 +8,9 @@ const CHANNEL_CACHE_TTL_MS = 60 * 1000;
 const userInfoCache = new Map<string, { isAdmin: boolean; expiresAt: number }>();
 const USER_CACHE_TTL_MS = 60 * 1000;
 
+let firehouseMembersCache: { members: Set<string>; expiresAt: number } | null = null;
+const FIREHOUSE_CACHE_TTL_MS = 60 * 1000;
+
 const FIREHOUSE = 'G01DBHPLK25';
 
 export async function getChannelManagers(channel: string): Promise<string[]> {
@@ -48,6 +51,11 @@ export async function isUserAdmin(userId: string): Promise<boolean> {
 }
 
 export async function isUserInFirehouse(userId: string): Promise<boolean> {
+    if (firehouseMembersCache && firehouseMembersCache.expiresAt > Date.now()) {
+        return firehouseMembersCache.members.has(userId);
+    }
+
+    const members = new Set<string>();
     let cursor: string | undefined;
 
     do {
@@ -56,12 +64,18 @@ export async function isUserInFirehouse(userId: string): Promise<boolean> {
             limit: 200,
             cursor,
         });
-        if (result.members?.includes(userId)) {
-            return true;
+        for (const member of result.members ?? []) {
+            members.add(member);
         }
         cursor = result.response_metadata?.next_cursor;
     } while (cursor);
-    return false;
+
+    firehouseMembersCache = {
+        members,
+        expiresAt: Date.now() + FIREHOUSE_CACHE_TTL_MS,
+    };
+
+    return members.has(userId);
 }
 
 export function isUserOwner(userId: string): boolean {
