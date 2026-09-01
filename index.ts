@@ -7,6 +7,7 @@ import {
     getPrisma,
     isUserInFirehouse,
     postEphemeral,
+    postMessage,
 } from './utils/index.js';
 
 const isDevMode = env.NODE_ENV === 'development';
@@ -111,14 +112,36 @@ app.use(async (args) => {
         channel?: { id?: string };
     };
     const userId = body.user_id ?? body.user?.id;
-    if (!userId || (await isUserInFirehouse(userId))) {
+    if (!userId) {
+        await args.next();
+        return;
+    }
+
+    let allowed = false;
+    try {
+        allowed = await isUserInFirehouse(userId);
+    } catch (e) {
+        console.error('[fd-gate] membership lookup failed:', e);
+    }
+
+    if (allowed) {
         await args.next();
         return;
     }
 
     await args.ack();
-    const channel = body.channel_id ?? body.channel?.id ?? 'G01DBHPLK25';
-    await postEphemeral(channel, userId, 'Sorry, you need to be in the FD to use Firehose.');
+
+    const message = 'Sorry, you need to be in the FD to use Firehose.';
+    const channel = body.channel_id ?? body.channel?.id;
+    try {
+        if (channel) {
+            await postEphemeral(channel, userId, message);
+        } else {
+            await postMessage(userId, message);
+        }
+    } catch (e) {
+        console.error('[fd-gate] could not notify user:', e);
+    }
 });
 
 async function joinAllChannels(client: App['client']) {
