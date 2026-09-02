@@ -5,6 +5,7 @@ import {
     logInternal,
     deleteMessage,
     getMessageLink,
+    getPrisma,
 } from '../../utils/index.js';
 import * as api from './api.js';
 
@@ -100,6 +101,21 @@ async function messageListener({
         console.log('[bot-whitelist] isWhitelisted:', isWhitelisted);
 
         if (!isWhitelisted) {
+            const deletePromise = deleteMessage(channel, ts);
+            const shushableUserIds = [userId, botUserId].filter((id): id is string => Boolean(id));
+            const shushedBot =
+                shushableUserIds.length > 0
+                    ? await getPrisma().bans.findFirst({
+                          where: { user: { in: shushableUserIds } },
+                          select: { id: true },
+                      })
+                    : null;
+
+            if (shushedBot) {
+                await deletePromise;
+                return;
+            }
+
             const messageLink = getMessageLink(channel, ts, threadTs);
             const appId = botInfo?.bot?.app_id || userInfo?.user?.profile?.api_app_id;
             const displayName = userInfo?.user?.real_name || botInfo?.bot?.name || identifier;
@@ -108,12 +124,13 @@ async function messageListener({
                 : '';
             const messageKind = isThreadReply ? 'thread reply' : 'top-level message';
 
-            await logInternal(
-                `*Bot Protection:* Deleted ${messageKind} from unauthorized bot *${displayName}* in <#${channel}>.\n` +
-                    `*Original Message:* ${messageLink}${marketplaceLink}`
-            );
-
-            await deleteMessage(channel, ts);
+            await Promise.all([
+                deletePromise,
+                logInternal(
+                    `*Bot Protection:* Deleted ${messageKind} from unauthorized bot *${displayName}* in <#${channel}>.\n` +
+                        `*Original Message:* ${messageLink}${marketplaceLink}`
+                ),
+            ]);
         }
     } catch (e) {
         console.error(`Error in messageListener bot whitelist enforcement:`, e);
