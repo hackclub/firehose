@@ -110,3 +110,8 @@ model BotWhitelist {
   enabled   Boolean  @default(false)
   botIds    String[] @default([])
 }
+
+model AutoresponseCooldown {
+  userId     String   @id
+  lastSentAt DateTime @default(now())
+}
