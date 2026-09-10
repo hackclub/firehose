@@ -13,13 +13,14 @@ export async function logPublic(text: string, logConsole = true): Promise<void> 
     }
 }
 
-export async function logInternal(text: string, logConsole = true): Promise<void> {
+export async function logInternal(text: string, logConsole = true, threadTs?: string) {
     if (logConsole) {
         console.log(text);
     }
-    await client.chat.postMessage({
+    return await client.chat.postMessage({
         channel: env.MIRRORCHANNEL,
         text,
+        thread_ts: threadTs,
     });
 }
 

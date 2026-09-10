@@ -111,6 +111,18 @@ model BotWhitelist {
   botIds    String[] @default([])
 }
 
+model BotWhitelistAlert {
+  channelId       String
+  botId           String
+  logMessageTs    String
+  windowStartedAt DateTime
+  expiresAt       DateTime
+  updatedAt       DateTime @updatedAt
+
+  @@id([channelId, botId])
+  @@index([expiresAt])
+}
+
 model AutoresponseCooldown {
   userId     String   @id
   lastSentAt DateTime @default(now())

@@ -59,7 +59,12 @@ async function messageListener({
     if (!message || !message.channel) return;
     const { channel, ts, subtype } = message;
 
-    const isBot = subtype === 'bot_message' || 'bot_id' in message;
+    const botId =
+        'bot_id' in message && typeof message.bot_id === 'string' ? message.bot_id : undefined;
+    const isClassicBotMessage = subtype === 'bot_message';
+    const isModernBotMessage =
+        !!botId && 'bot_profile' in message && message.bot_profile != null;
+    const isBot = isClassicBotMessage || isModernBotMessage;
     if (!isBot) return;
 
     const threadTs = 'thread_ts' in message ? (message.thread_ts as string | undefined) : undefined;
@@ -69,7 +74,6 @@ async function messageListener({
         const config = await api.getWhitelistConfig(channel);
         if (!config || !config.enabled) return;
 
-        const botId = 'bot_id' in message ? (message.bot_id as string) : undefined;
         const userId = 'user' in message ? (message.user as string) : undefined;
         const identifier = userId || botId;
 
@@ -103,17 +107,43 @@ async function messageListener({
             const messageLink = getMessageLink(channel, ts, threadTs);
             const appId = botInfo?.bot?.app_id || userInfo?.user?.profile?.api_app_id;
             const displayName = userInfo?.user?.real_name || botInfo?.bot?.name || identifier;
+            const botMentionId = botUserId || userId;
+            const botIdentity = botMentionId
+                ? `<@${botMentionId}> - ${botMentionId}`
+                : `${displayName} - ${botId || identifier}`;
             const marketplaceLink = appId
                 ? `\n*Manage this bot:* https://hackclub.slack.com/marketplace/${appId}`
                 : '';
             const messageKind = isThreadReply ? 'thread reply' : 'top-level message';
-
-            await logInternal(
-                `*Bot Protection:* Deleted ${messageKind} from unauthorized bot *${displayName}* in <#${channel}>.\n` +
-                    `*Original Message:* ${messageLink}${marketplaceLink}`
-            );
+            const alertText =
+                `*Bot Protection:* Deleted ${messageKind} from unauthorized bot ${botIdentity} in <#${channel}>.\n` +
+                `*Original Message:* ${messageLink}${marketplaceLink}`;
+            const alertBotId = botId || botUserId || userId;
 
             await deleteMessage(channel, ts);
+
+            if (!alertBotId) {
+                await logInternal(alertText);
+                return;
+            }
+
+            const activeAlert = await api.getActiveBotWhitelistAlert({
+                channelId: channel,
+                botId: alertBotId,
+            });
+
+            if (activeAlert) {
+                await logInternal(alertText, true, activeAlert.logMessageTs);
+                return;
+            }
+
+            const rootAlert = await logInternal(alertText);
+            if (rootAlert.ts) {
+                await api.saveBotWhitelistAlert(
+                    { channelId: channel, botId: alertBotId },
+                    rootAlert.ts
+                );
+            }
         }
     } catch (e) {
         console.error(`Error in messageListener bot whitelist enforcement:`, e);
