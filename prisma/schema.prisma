@@ -127,17 +127,3 @@ model AutoresponseCooldown {
   userId     String   @id
   lastSentAt DateTime @default(now())
 }
-
-model MessageIndex {
-  id       Int      @id @default(autoincrement())
-  user     String
-  channel  String
-  ts       String
-  threadTs String?
-  sentAt   DateTime
-
-  @@unique([channel, ts])
-  @@index([user, sentAt])
-  @@index([sentAt])
-  @@index([channel, threadTs])
-}

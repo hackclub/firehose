@@ -82,6 +82,7 @@ oauth_config:
         user:
             - chat:write
             - channels:write
+            - search:read
         bot:
             - app_mentions:read
             - channels:history

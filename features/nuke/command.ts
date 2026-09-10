@@ -1,7 +1,7 @@
 import type { SlackCommandMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import type { View } from '@slack/types';
 import { isUserAdmin, postEphemeral } from '../../utils/index.js';
-import { NUKE_WINDOWS, RETENTION_DAYS } from './windows.js';
+import { NUKE_WINDOWS } from './windows.js';
 
 const DEFAULT_WINDOW = '24h';
 
@@ -55,10 +55,6 @@ async function nukeCommand({
                     initial_option: initialWindow,
                 },
                 label: { type: 'plain_text', text: 'Delete messages from' },
-                hint: {
-                    type: 'plain_text',
-                    text: `Only the last ${RETENTION_DAYS} days are indexed.`,
-                },
             },
             {
                 type: 'input',

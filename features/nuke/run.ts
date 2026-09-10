@@ -1,4 +1,5 @@
-import { getPrisma, deleteMessages, logInternal, client, env } from '../../utils/index.js';
+import { deleteMessages, logInternal, client, env } from '../../utils/index.js';
+import { searchUserMessages } from './search.js';
 
 export type NukeTarget = {
     channel: string;
@@ -6,37 +7,16 @@ export type NukeTarget = {
 };
 
 export async function collectTargets(user: string, since: Date): Promise<NukeTarget[]> {
-    const prisma = getPrisma();
-    const rows = await prisma.messageIndex.findMany({
-        where: { user, sentAt: { gte: since } },
-        select: { channel: true, ts: true },
-        orderBy: { sentAt: 'desc' },
-    });
+    const matches = await searchUserMessages(user, since);
 
     const byChannel = new Map<string, string[]>();
-    for (const row of rows) {
-        const existing = byChannel.get(row.channel);
-        if (existing) existing.push(row.ts);
-        else byChannel.set(row.channel, [row.ts]);
+    for (const { channel, ts } of matches) {
+        const existing = byChannel.get(channel);
+        if (existing) existing.push(ts);
+        else byChannel.set(channel, [ts]);
     }
 
     return [...byChannel].map(([channel, timestamps]) => ({ channel, timestamps }));
-}
-
-export async function countThreadParents(targets: NukeTarget[]): Promise<number> {
-    const prisma = getPrisma();
-    let parents = 0;
-
-    for (const { channel, timestamps } of targets) {
-        const replies = await prisma.messageIndex.findMany({
-            where: { channel, threadTs: { in: timestamps } },
-            select: { threadTs: true },
-            distinct: ['threadTs'],
-        });
-        parents += replies.filter((r) => r.threadTs && timestamps.includes(r.threadTs)).length;
-    }
-
-    return parents;
 }
 
 export async function runNuke(
@@ -46,7 +26,6 @@ export async function runNuke(
     windowLabel: string,
     reason: string
 ): Promise<void> {
-    const prisma = getPrisma();
     const total = targets.reduce((sum, t) => sum + t.timestamps.length, 0);
     const started = Date.now();
     const reasonText = reason || '(none provided)';
@@ -61,10 +40,6 @@ export async function runNuke(
     for (const { channel, timestamps } of targets) {
         deleted += await deleteMessages(channel, timestamps);
         done++;
-
-        await prisma.messageIndex.deleteMany({
-            where: { channel, ts: { in: timestamps } },
-        });
 
         if (progress?.ts && done % 5 === 0 && done < targets.length) {
             try {
