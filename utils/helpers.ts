@@ -1,5 +1,8 @@
 import * as chrono from 'chrono-node';
 
+const BARE_DURATION =
+    /^\d+\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|wk|wks|week|weeks|mo|month|months|y|yr|yrs|year|years)\b/i;
+
 export function parseDuration(args: string[]): {
     expiresAt: Date | null;
     remaining: string[];
@@ -7,7 +10,16 @@ export function parseDuration(args: string[]): {
 } {
     const joined = args.join(' ');
     const match = joined.match(/^&lt;([^&]+)&gt;\s*/);
-    if (!match) return { expiresAt: null, remaining: args };
+    if (!match) {
+        if (BARE_DURATION.test(joined)) {
+            return {
+                expiresAt: null,
+                remaining: args,
+                error: 'Durations must be wrapped in angle brackets, e.g. `<2 days>`. Leave it out entirely to make this permanent.',
+            };
+        }
+        return { expiresAt: null, remaining: args };
+    }
 
     const input = match[1];
     const parsed = chrono.parseDate(input) ?? chrono.parseDate(`in ${input}`);

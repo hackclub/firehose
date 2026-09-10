@@ -67,6 +67,11 @@ features:
           description: count
           usage_hint: count
           should_escape: false
+        - command: /nuke
+          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          description: delete a user's recent messages across all channels
+          usage_hint: '[user]'
+          should_escape: true
         - command: /newaccount
           url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
           description: restrict a channel to accounts older than N days
