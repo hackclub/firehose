@@ -3,6 +3,7 @@ import * as readonly from './readonly/index.js';
 import * as channelBan from './channel_ban/index.js';
 import * as shush from './shush/index.js';
 import * as purge from './purge/index.js';
+import * as nuke from './nuke/index.js';
 import * as threadLock from './thread_lock/index.js';
 import * as threadDestroy from './thread_destroy/index.js';
 import * as messageMatch from './automod/index.js';
@@ -17,6 +18,7 @@ export const features = [
     channelBan,
     shush,
     purge,
+    nuke,
     threadLock,
     threadDestroy,
     messageMatch,
@@ -26,4 +28,14 @@ export const features = [
     unsubShield,
 ];
 
-export { slowmode, readonly, channelBan, shush, purge, threadLock, threadDestroy, botWhitelist };
+export {
+    slowmode,
+    readonly,
+    channelBan,
+    shush,
+    purge,
+    nuke,
+    threadLock,
+    threadDestroy,
+    botWhitelist,
+};
