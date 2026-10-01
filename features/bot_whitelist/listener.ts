@@ -86,6 +86,7 @@ async function messageListener({
         ]);
 
         if (identifier === authInfo.user_id || botId === authInfo.bot_id) return;
+        if (userId && userInfo?.user && !userInfo.user.is_bot) return;
 
         const botUserId = (botInfo as any)?.bot?.user_id as string | undefined;
 
