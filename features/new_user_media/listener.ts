@@ -14,7 +14,7 @@ const NEW_USER_WINDOW_MS = 24 * 60 * 60 * 1000;
 async function newUserMediaListener({
     payload,
 }: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs) {
-    if (!(payload?.type !== 'message') || !('user' in payload)) return;
+    if (payload?.type !== 'message' || !('user' in payload)) return;
 
     const files = 'files' in payload ? payload.files : undefined;
     if (!files?.length) return;
