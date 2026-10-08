@@ -25,50 +25,50 @@ features:
           description: Permanently delete a thread
     slash_commands:
         - command: /channelban
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: ban a user from a channel
           usage_hint: '[user] [channel] [reason]'
           should_escape: true
         - command: /unban
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: unban user from channel
           usage_hint: '[user] [channel]'
           should_escape: true
         - command: /read-only
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: makes channels read only
           usage_hint: '[channel]'
           should_escape: true
         - command: /slowmode
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: slowmode
           should_escape: true
         - command: /banlist
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: bans
           should_escape: false
         - command: /shush
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: shush @person reason
           usage_hint: '[user] [reason]'
           should_escape: true
         - command: /whitelist
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: 'whitelist'
           usage_hint: '@user'
           should_escape: true
         - command: /unshush
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: unmute
           usage_hint: '@user'
           should_escape: true
         - command: /purge
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: count
           usage_hint: count
           should_escape: false
         - command: /newaccount
-          url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+          url: https://breezy-clover-72.k.hackclub.dev/slack/events
           description: restrict a channel to accounts older than N days
           usage_hint: '[channel] [days]'
           should_escape: true
@@ -77,6 +77,7 @@ oauth_config:
         user:
             - chat:write
             - channels:write
+            - files:write
         bot:
             - app_mentions:read
             - channels:history
@@ -105,7 +106,7 @@ oauth_config:
             - files:write
 settings:
     event_subscriptions:
-        request_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+        request_url: https://breezy-clover-72.k.hackclub.dev/slack/events
         bot_events:
             - app_mention
             - channel_created
@@ -116,8 +117,8 @@ settings:
             - reaction_added
     interactivity:
         is_enabled: true
-        request_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
-        message_menu_options_url: https://gg4cwccgws8cksw080o04g4o.a.selfhosted.hackclub.com/slack/events
+        request_url: https://breezy-clover-72.k.hackclub.dev/slack/events
+        message_menu_options_url: https://breezy-clover-72.k.hackclub.dev/slack/events
     org_deploy_enabled: false
     socket_mode_enabled: false
     token_rotation_enabled: false

@@ -1,5 +1,6 @@
 import { client, userClient } from './client.js';
 import { runWithConcurrency } from '../helpers.js';
+import { isUserAPIAvailable, userAPI } from './userAPI.js';
 import type { ChatPostMessageResponse } from '@slack/web-api';
 
 let userClientId: string | undefined;
@@ -25,6 +26,55 @@ export async function deleteMessage(channel: string, ts: string): Promise<void> 
       if (inviteErr?.data?.error !== 'already_in_channel') throw inviteErr;
     }
     await userClient.chat.delete({ channel, ts });
+  }
+}
+
+let browserUserId: string | undefined;
+async function getBrowserUserId(): Promise<string> {
+  if (!browserUserId) {
+    const auth = await userAPI('auth.test', {});
+    if (!auth.user_id) throw new Error('Could not resolve browser user identity');
+    browserUserId = auth.user_id as string;
+  }
+  return browserUserId;
+}
+
+function isFileNotFound(e: any): boolean {
+  return e?.data?.error === 'file_not_found' || String(e?.message).includes('file_not_found');
+}
+
+// the deleting account can't see files in channels it isn't in, so invite it and retry
+async function deleteFileAs(
+  channel: string,
+  del: () => Promise<unknown>,
+  getUserId: () => Promise<string>
+): Promise<void> {
+  try {
+    await del();
+  } catch (e) {
+    if (!isFileNotFound(e)) throw e;
+
+    const userId = await getUserId();
+    try {
+      await client.conversations.invite({ channel, users: userId });
+    } catch (inviteErr: any) {
+      if (inviteErr?.data?.error !== 'already_in_channel') throw inviteErr;
+    }
+    await del();
+  }
+}
+
+// the bot can't delete other users' files, prefer the xoxp token
+// fall back to the admin browser session if that fails
+export async function deleteFile(channel: string, file: string): Promise<void> {
+  try {
+    await deleteFileAs(channel, () => userClient.files.delete({ file }), getUserClientId);
+  } catch (e: any) {
+    if (!isUserAPIAvailable) throw e;
+    console.warn(
+      `xoxp could not delete file ${file} (${e?.data?.error ?? e}), falling back to browser session`
+    );
+    await deleteFileAs(channel, () => userAPI('files.delete', { file }), getBrowserUserId);
   }
 }
 
