@@ -11,6 +11,11 @@ import {
 
 const NEW_USER_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+// new users need to share screenshots here to get help with their accounts
+const EXCLUDED_CHANNELS = new Set([
+    'C092833JXKK', // #identity-help
+]);
+
 async function newUserMediaListener({
     payload,
 }: SlackEventMiddlewareArgs<'message'> & AllMiddlewareArgs) {
@@ -21,6 +26,7 @@ async function newUserMediaListener({
 
     const { user, ts, channel } = payload;
     if (!user) return;
+    if (EXCLUDED_CHANNELS.has(channel)) return;
 
     const prisma = getPrisma();
     const member = await prisma.memberJoinDate.findUnique({
