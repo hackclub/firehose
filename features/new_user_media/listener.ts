@@ -11,9 +11,9 @@ import {
 
 const NEW_USER_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-// new users need to share screenshots here to get help with their accounts
 const EXCLUDED_CHANNELS = new Set([
     'C092833JXKK', // #identity-help
+    'C07TM4C0AQ5', // #help
 ]);
 
 async function newUserMediaListener({
