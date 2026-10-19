@@ -28,6 +28,9 @@ async function newUserMediaListener({
     if (!user) return;
     if (EXCLUDED_CHANNELS.has(channel)) return;
 
+    const thread_ts = 'thread_ts' in payload ? payload.thread_ts : undefined;
+    if (thread_ts && thread_ts !== ts && payload.subtype !== 'thread_broadcast') return;
+
     const prisma = getPrisma();
     const member = await prisma.memberJoinDate.findUnique({
         where: { userId: user },
@@ -37,8 +40,6 @@ async function newUserMediaListener({
 
     if (await isUserBot(user)) return;
     if (await isUserExempt(user, channel)) return;
-
-    const thread_ts = 'thread_ts' in payload ? payload.thread_ts : undefined;
 
     let deleted = 0;
     for (const file of files) {
