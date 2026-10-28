@@ -1,124 +1,133 @@
 display_information:
-    name: Firehose
-    description: A moderation helper bot
-    background_color: '#ff4d00'
+  name: Firehose
+  description: A moderation helper bot
+  background_color: "#ff4d00"
 features:
-    app_home:
-        home_tab_enabled: true
-        messages_tab_enabled: false
-        messages_tab_read_only_enabled: true
-    bot_user:
-        display_name: Firehose
-        always_online: false
-    shortcuts:
-        - name: Lock the thread
-          type: message
-          callback_id: lock_thread
-          description: Locks threads
-        - name: Slowmode thread
-          type: message
-          callback_id: slowmode_thread
-          description: Enable slowmode on a thread
-        - name: Destroy thread
-          type: message
-          callback_id: destroy_thread
-          description: Permanently delete a thread
-    slash_commands:
-        - command: /channelban
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: ban a user from a channel
-          usage_hint: '[user] [channel] [reason]'
-          should_escape: true
-        - command: /unban
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: unban user from channel
-          usage_hint: '[user] [channel]'
-          should_escape: true
-        - command: /read-only
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: makes channels read only
-          usage_hint: '[channel]'
-          should_escape: true
-        - command: /slowmode
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: slowmode
-          should_escape: true
-        - command: /banlist
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: bans
-          should_escape: false
-        - command: /shush
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: shush @person reason
-          usage_hint: '[user] [reason]'
-          should_escape: true
-        - command: /whitelist
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: 'whitelist'
-          usage_hint: '@user'
-          should_escape: true
-        - command: /unshush
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: unmute
-          usage_hint: '@user'
-          should_escape: true
-        - command: /purge
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: count
-          usage_hint: count
-          should_escape: false
-        - command: /newaccount
-          url: https://breezy-clover-72.k.hackclub.dev/slack/events
-          description: restrict a channel to accounts older than N days
-          usage_hint: '[channel] [days]'
-          should_escape: true
+  app_home:
+    home_tab_enabled: true
+    messages_tab_enabled: false
+    messages_tab_read_only_enabled: true
+  bot_user:
+    display_name: Firehose
+    always_online: false
+  shortcuts:
+    - name: Lock the thread
+      type: message
+      callback_id: lock_thread
+      description: Locks threads
+    - name: Slowmode thread
+      type: message
+      callback_id: slowmode_thread
+      description: Enable slowmode on a thread
+    - name: Destroy thread
+      type: message
+      callback_id: destroy_thread
+      description: Permanently delete a thread
+  slash_commands:
+    - command: /channelban
+      description: ban a user from a channel
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: "[user] [channel] [reason]"
+    - command: /unban
+      description: unban user from channel
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: "[user] [channel]"
+    - command: /read-only
+      description: makes channels read only
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: "[channel]"
+    - command: /slowmode
+      description: slowmode
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+    - command: /banlist
+      description: bans
+      should_escape: false
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+    - command: /shush
+      description: shush @person reason
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: "[user] [reason]"
+    - command: /whitelist
+      description: whitelist
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: "@user"
+    - command: /unshush
+      description: unmute
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: "@user"
+    - command: /purge
+      description: count
+      should_escape: false
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: count
+    - command: /newaccount
+      description: restrict a channel to accounts older than N days
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: "[channel] [days]"
+    - command: /bot-whitelist
+      description: manage which bots can post in a channel
+      should_escape: true
+      url: https://breezy-clover-72.k.hackclub.dev/slack/events
+      usage_hint: "[status|enable|disable|add|remove] [@bot]"
 oauth_config:
-    scopes:
-        user:
-            - chat:write
-            - channels:write
-            - files:write
-        bot:
-            - app_mentions:read
-            - channels:history
-            - channels:manage
-            - channels:read
-            - chat:write
-            - chat:write.customize
-            - chat:write.public
-            - commands
-            - files:read
-            - groups:history
-            - groups:read
-            - groups:write
-            - groups:write.invites
-            - im:history
-            - im:read
-            - im:write
-            - metadata.message:read
-            - mpim:read
-            - reactions:read
-            - reactions:write
-            - users.profile:read
-            - users:read
-            - users:read.email
-            - channels:join
-            - files:write
+  scopes:
+    user:
+      - chat:write
+      - channels:write
+      - files:write
+    bot:
+      - app_mentions:read
+      - channels:history
+      - channels:manage
+      - channels:read
+      - chat:write
+      - chat:write.customize
+      - chat:write.public
+      - commands
+      - files:read
+      - groups:history
+      - groups:read
+      - groups:write
+      - groups:write.invites
+      - im:history
+      - im:read
+      - im:write
+      - metadata.message:read
+      - mpim:read
+      - reactions:read
+      - reactions:write
+      - users.profile:read
+      - users:read
+      - users:read.email
+      - channels:join
+      - files:write
+  pkce_enabled: false
 settings:
-    event_subscriptions:
-        request_url: https://breezy-clover-72.k.hackclub.dev/slack/events
-        bot_events:
-            - app_mention
-            - channel_created
-            - channel_left
-            - message.channels
-            - message.groups
-            - team_join
-            - reaction_added
-    interactivity:
-        is_enabled: true
-        request_url: https://breezy-clover-72.k.hackclub.dev/slack/events
-        message_menu_options_url: https://breezy-clover-72.k.hackclub.dev/slack/events
-    org_deploy_enabled: false
-    socket_mode_enabled: false
-    token_rotation_enabled: false
+  event_subscriptions:
+    bot_events:
+      - app_mention
+      - channel_created
+      - channel_left
+      - member_joined_channel
+      - message.channels
+      - message.groups
+      - team_join
+      - reaction_added
+    request_url: https://breezy-clover-72.k.hackclub.dev/slack/events
+  interactivity:
+    is_enabled: true
+    message_menu_options_url: https://breezy-clover-72.k.hackclub.dev/slack/events
+    request_url: https://breezy-clover-72.k.hackclub.dev/slack/events
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  is_mcp_enabled: false
+  token_rotation_enabled: false
+  app_level_token_rotation_enabled: false
