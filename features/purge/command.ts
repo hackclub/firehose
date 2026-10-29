@@ -29,23 +29,40 @@ async function purgeCommand({
         );
         return;
     }
+    let targetUser: string | undefined;
+    let channelArg: string | undefined;
+    for (const arg of commands.slice(1).filter(Boolean)) {
+        const user = arg.match(/<@([A-Z0-9]+)\|?.*>/)?.[1];
+        const channel = arg.match(/<#([A-Z0-9]+)\|?.*>/)?.[1];
+        if (user && !targetUser) targetUser = user;
+        else if (channel && !channelArg) channelArg = channel;
+        else {
+            await respond(
+                `:x: Invalid argument \`${arg}\`. Usage: \`/purge <amount> [@user] [#channel]\``
+            );
+            return;
+        }
+    }
+    const targetChannel = channelArg ?? channel_id;
+    const userText = targetUser ? ` from <@${targetUser}>` : '';
 
     const stamp = Date.now();
     const purgeMessage = await client.chat.postMessage({
-        text: `:spin-loading: Purging \`${amount}\` messages`,
-        channel: channel_id,
+        text: `:spin-loading: Purging \`${amount}\` messages${userText}`,
+        channel: targetChannel,
     });
 
     const messagesToDelete: string[] = [];
     let cursor: string | undefined;
     while (messagesToDelete.length < amount) {
         const response = await client.conversations.history({
-            channel: channel_id,
-            limit: Math.min(500, amount - messagesToDelete.length + 1),
+            channel: targetChannel,
+            limit: targetUser ? 500 : Math.min(500, amount - messagesToDelete.length + 1),
             cursor,
         });
         for (const msg of response.messages ?? []) {
             if (!msg.ts || msg.ts === purgeMessage.ts) continue;
+            if (targetUser && msg.user !== targetUser) continue;
             messagesToDelete.push(msg.ts);
             if (messagesToDelete.length >= amount) break;
         }
@@ -53,19 +70,19 @@ async function purgeCommand({
         if (!cursor) break;
     }
 
-    const deleted = await deleteMessages(channel_id, messagesToDelete);
+    const deleted = await deleteMessages(targetChannel, messagesToDelete);
     const failed = messagesToDelete.length - deleted;
 
     if (!purgeMessage.ts) return;
     const elapsed = Math.floor((Date.now() - stamp) / 1000);
     await Promise.all([
         client.chat.update({
-            channel: channel_id,
+            channel: targetChannel,
             ts: purgeMessage.ts,
-            text: `Purged \`${deleted}/${messagesToDelete.length}\` messages in \`${elapsed}s\`.`,
+            text: `Purged \`${deleted}/${messagesToDelete.length}\` messages${userText} in \`${elapsed}s\`.`,
         }),
         logInternal(
-            `<@${user_id}> purged \`${deleted}/${messagesToDelete.length}\` messages in <#${channel_id}> in \`${elapsed}s\`.`
+            `<@${user_id}> purged \`${deleted}/${messagesToDelete.length}\` messages${userText} in <#${targetChannel}> in \`${elapsed}s\`.`
         ),
     ]);
 }
