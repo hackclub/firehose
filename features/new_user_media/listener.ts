@@ -43,6 +43,8 @@ async function newUserMediaListener({
 
     let deleted = 0;
     for (const file of files) {
+        if (file.user !== user) continue;
+
         try {
             await deleteFile(channel, file.id);
             deleted++;
